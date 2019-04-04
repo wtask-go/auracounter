@@ -1,5 +1,5 @@
 /*
-Package auracounter represents standalone RPC server for maintain a distributed counter.
+Package auraserver represents standalone RPC server for maintain a distributed counter.
 
 Server provides simple API for incrementing and getting counter value.
 
