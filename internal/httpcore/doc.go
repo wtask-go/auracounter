@@ -1,4 +1,4 @@
 /*
-Package httpcore presents common logic for http application.
+Package httpcore contains common logic for http application.
 */
 package httpcore

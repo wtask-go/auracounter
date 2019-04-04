@@ -9,6 +9,8 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/wtask-go/auracounter/internal/httpcore/rest"
+
 	"github.com/wtask-go/auracounter/internal/httpcore"
 )
 
@@ -41,16 +43,17 @@ func main() {
 }
 
 func newServer(cfg *Config) *http.Server {
-	nextRequestID := func() string {
-		return fmt.Sprintf("%d", time.Now().UnixNano())
-	}
+	// nextRequestID := func() string {
+	// 	return fmt.Sprintf("%d", time.Now().UnixNano())
+	// }
 
 	router := http.NewServeMux()
 	router.Handle("/", index())
 
 	return &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", cfg.ServerAddress, cfg.ServerPort),
-		Handler: tracing(nextRequestID)(router),
+		Addr: fmt.Sprintf("%s:%d", cfg.ServerAddress, cfg.ServerPort),
+		// Handler: tracing(nextRequestID)(router),
+		Handler: rest.NewCounterHandler(nil),
 		// ErrorLog:     l,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
