@@ -13,6 +13,7 @@ type Config struct {
 	ServerAddress string
 	ServerPort    int
 	StorageDSN    string
+	CounterID     int
 }
 
 // verifyConfig - checks config for errors
@@ -28,6 +29,9 @@ func verifyConfig(cfg *Config) error {
 	}
 	if !strings.HasPrefix(cfg.StorageDSN, "mysql://") {
 		return errors.New("invalid DSN, must prefixed with mysql://")
+	}
+	if cfg.CounterID < 1 {
+		return errors.Errorf("invalid counter ID %d", cfg.CounterID)
 	}
 	return nil
 }
@@ -49,6 +53,8 @@ func configureFromCLI() (*Config, error) {
 		"Required: DSN string to connect with DB. Only MySQL is supported.\n"+
 			"Format: `mysql://user:pass@tcp(host-or-ip:port)/database`",
 	)
+	flag.IntVar(&cfg.CounterID, "cid", 1, "Required: Counter ID to maintain.\n")
+
 	if !flag.Parsed() {
 		flag.Parse()
 	}

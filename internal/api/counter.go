@@ -3,7 +3,7 @@ package api
 type CounterService interface {
 	GetNumber() (*GetNumberResult, error)
 	IncrementNumber() (*IncrementNumberResult, error)
-	SetSettings(step, max int) (*SetSettingsResult, error)
+	SetSettings(delta, max int) (*SetSettingsResult, error)
 }
 
 type GetNumberResult struct {
