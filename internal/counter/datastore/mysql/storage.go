@@ -43,7 +43,9 @@ func NewStorage(options ...storageOption) (counter.Storage, error) {
 	}
 	s.db = db
 
-	s.db.SingularTable(true)
+	s.db.
+		LogMode(false).
+		SingularTable(true)
 	err = s.db.
 		Set("gorm:table_options", "COLLATE='utf8_general_ci' ENGINE=InnoDB").
 		AutoMigrate(&model.Counter{}).

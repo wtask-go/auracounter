@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/wtask-go/auracounter/internal/httpcore/response"
 
@@ -41,43 +42,69 @@ func NewCounterHandler(service api.CounterService) http.Handler {
 
 	return r
 }
+func httpStatusFactory(err error) int {
+	if err == nil {
+		return http.StatusOK
+	}
+	if api.IsRequestError(err) {
+		return http.StatusBadRequest
+	}
+	return http.StatusInternalServerError
+}
 
 func handleGetNumber(service api.CounterService) http.HandlerFunc {
-	return response.HandleJSON(
-		http.StatusNotImplemented,
-		&response.Fail{
-			response.ErrorDescription{0, "Not implemented"},
-		},
-	)
-
-	// return func(w http.ResponseWriter, r *http.Request) {
-
-	// }
+	return func(w http.ResponseWriter, r *http.Request) {
+		result, err := service.GetNumber()
+		status := httpStatusFactory(err)
+		if err != nil {
+			response.HandleJSON(status, &response.Fail{response.ErrorDescription{0, fmt.Sprint(err)}})(w, r)
+			return
+		}
+		response.HandleJSON(status, &response.Success{Result: result})(w, r)
+	}
 }
 
 func handleIncrementNumber(service api.CounterService) http.HandlerFunc {
-	return response.HandleJSON(
-		http.StatusNotImplemented,
-		&response.Fail{
-			response.ErrorDescription{0, "Not implemented"},
-		},
-	)
-	// return func(w http.ResponseWriter, r *http.Request) {
-
-	// }
+	return func(w http.ResponseWriter, r *http.Request) {
+		result, err := service.IncrementNumber()
+		status := httpStatusFactory(err)
+		if err != nil {
+			response.HandleJSON(status, &response.Fail{response.ErrorDescription{0, fmt.Sprint(err)}})(w, r)
+			return
+		}
+		response.HandleJSON(status, &response.Success{Result: result})(w, r)
+	}
 }
 
 func handleSetSettings(service api.CounterService) http.HandlerFunc {
-	return response.HandleJSON(
-		http.StatusNotImplemented,
-		&response.Fail{
-			response.ErrorDescription{0, "Not implemented"},
-		},
-	)
-
-	// return func(w http.ResponseWriter, r *http.Request) {
-
-	// }
+	return func(w http.ResponseWriter, r *http.Request) {
+		delta, err := strconv.Atoi(mux.Vars(r)["delta"])
+		if err != nil {
+			response.HandleJSON(
+				http.StatusBadRequest,
+				&response.Fail{response.ErrorDescription{0, fmt.Sprint("Invalid or bad delta param")}},
+			)(w, r)
+			return
+		}
+		max, err := strconv.Atoi(mux.Vars(r)["max"])
+		if err != nil {
+			response.HandleJSON(
+				http.StatusBadRequest,
+				&response.Fail{response.ErrorDescription{0, fmt.Sprint("Invalid or bad max param")}},
+			)(w, r)
+			return
+		}
+		result, err := service.SetSettings(delta, max)
+		status := httpStatusFactory(err)
+		if err != nil {
+			response.HandleJSON(
+				status,
+				&response.Fail{response.ErrorDescription{0, fmt.Sprint(err)}},
+			)(w, r)
+			return
+		}
+		response.HandleJSON(status, &response.Success{Result: result})(w, r)
+	}
 }
 
 func handleNotFound() http.HandlerFunc {
@@ -93,9 +120,7 @@ func handleMethodNotAllowed() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response.HandleJSON(
 			http.StatusMethodNotAllowed,
-			&response.Fail{
-				response.ErrorDescription{0, fmt.Sprintf("Request method is not allowed (%s)", r.Method)},
-			},
+			&response.Fail{response.ErrorDescription{0, fmt.Sprintf("Request method is not allowed (%s)", r.Method)}},
 		)(w, r)
 	}
 }

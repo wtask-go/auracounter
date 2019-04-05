@@ -12,24 +12,27 @@ func (s *storage) GetNumber() (int, error) {
 	// If settings was not set, getCounter() return empty model
 	// If err == nil, errors.Wrapf() return nil
 	// So method for counter without settings set will always return (0, nil)
-	return c.CurrentValue, errors.Wrapf(err, "mysql.Repository: failed to get current counter (#%d) value", s.cid)
+	num := 0
+	if c != nil {
+		num = c.CurrentValue
+	}
+	return num, errors.Wrapf(err, "mysql.Repository: failed to get current counter (#%d) value", s.cid)
 }
 
 func (s *storage) IncrementNumber() (int, error) {
 	c := &model.Counter{}
-	table := s.db.NewScope(c).GetModelStruct().TableName
+	table := s.db.NewScope(c).TableName()
 	tx := s.db.Begin()
 	if tx.Error != nil {
 		return 0, errors.Wrap(tx.Error, "mysql.Repository: failed to lock before increment")
 	}
 	err := tx.Exec(
-		"INSERT ? VALUES (counter_id, current_value, delta, max) (?, ?, ?, ?) "+
+		"INSERT INTO "+table+" (counter_id, current_value, delta, max) VALUES (?, ?, ?, ?) "+
 			"ON DUPLICATE KEY UPDATE current_value=IF(current_value+delta>max,0,current_value+delta)",
-		table,
 		s.cid,
 		1, // not 0 !!! if insert, hence previous counter value was 0, but new is 1 for default
 		1,
-		int(^uint(0)>>1), // max int
+		int(^uint32(0)>>1), // max int32
 	).Error
 	if err != nil {
 		tx.Rollback()
@@ -49,11 +52,11 @@ func (s *storage) IncrementNumber() (int, error) {
 
 func (s *storage) SetSettings(delta, max int) error {
 	// transaction is unnecessary
-	table := s.db.NewScope(&model.Counter{}).GetModelStruct().TableName
+	table := s.db.NewScope(&model.Counter{}).TableName()
 	err := s.db.Exec(
-		"INSERT ? VALUES (counter_id, current_value, delta, max) (?, ?, ?, ?) "+
-			"ON DUPLICATE KEY UPDATE delta=?, max=?",
-		table,
+		"INSERT INTO "+table+" (counter_id, current_value, delta, max) VALUES (?, ?, ?, ?) "+
+			"ON DUPLICATE KEY UPDATE delta=?, max=?;",
+		// table,
 		s.cid,
 		0, // now 0 !!! if insert, hence it is primary initialization
 		delta,

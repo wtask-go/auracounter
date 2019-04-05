@@ -51,7 +51,7 @@ func configureFromCLI() (*Config, error) {
 		"dsn",
 		"",
 		"Required: DSN string to connect with DB. Only MySQL is supported.\n"+
-			"Format: `mysql://user:pass@tcp(host-or-ip:port)/database`",
+			"Format: `mysql://{user}:{pass}@tcp({host-or-ip}:{port})/{database}?parseTime=true&timeout=3m`",
 	)
 	flag.IntVar(&cfg.CounterID, "cid", 1, "Required: Counter ID to maintain.\n")
 

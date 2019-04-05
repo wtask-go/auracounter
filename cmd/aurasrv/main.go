@@ -1,13 +1,15 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/wtask-go/auracounter/internal/counter"
+	"github.com/wtask-go/auracounter/internal/counter/datastore/mysql"
 
 	"github.com/wtask-go/auracounter/internal/httpcore/rest"
 
@@ -16,15 +18,20 @@ import (
 
 func main() {
 
-	cfg, _ := configureFromCLI()
-	// if err != nil {
-	// 	os.Exit(1)
-	// }
+	cfg, err := configureFromCLI()
+	if err != nil {
+		fmt.Println("STARTUP ERROR:", err)
+		os.Exit(1)
+	}
 
 	l := log.New(os.Stdout, "auraserver ", log.LUTC|log.Ldate|log.Lmicroseconds|log.Ltime)
 	l.Println("Hello!")
 
-	server := newServer(cfg)
+	storage := storageFactory(cfg)
+	defer storage.Close()
+	service := counter.NewCounterService(storage.Repository())
+	handleREST := rest.NewCounterHandler(service)
+	server := newServer(cfg.ServerAddress, cfg.ServerPort, handleREST)
 
 	shutdown, err := httpcore.LaunchServer(server, 3*time.Second)
 	if err != nil {
@@ -42,54 +49,25 @@ func main() {
 	l.Println("Bye!")
 }
 
-func newServer(cfg *Config) *http.Server {
-	// nextRequestID := func() string {
-	// 	return fmt.Sprintf("%d", time.Now().UnixNano())
-	// }
+func storageFactory(cfg *Config) counter.Storage {
+	r, err := mysql.NewStorage(
+		mysql.WithDSN(cfg.StorageDSN),
+		mysql.WithCounterID(cfg.CounterID),
+		mysql.WithTablePrefix("aura_"),
+	)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
 
-	router := http.NewServeMux()
-	router.Handle("/", index())
-
+func newServer(addr string, port int, handler http.Handler) *http.Server {
 	return &http.Server{
-		Addr: fmt.Sprintf("%s:%d", cfg.ServerAddress, cfg.ServerPort),
-		// Handler: tracing(nextRequestID)(router),
-		Handler: rest.NewCounterHandler(nil),
+		Addr:    fmt.Sprintf("%s:%d", addr, port),
+		Handler: handler,
 		// ErrorLog:     l,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
-	}
-}
-
-func index() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
-			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-			return
-		}
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "Hello, World!")
-	})
-}
-
-type key int
-
-const (
-	requestIDKey key = 0
-)
-
-func tracing(nextRequestID func() string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			requestID := r.Header.Get("X-Request-Id")
-			if requestID == "" {
-				requestID = nextRequestID()
-			}
-			ctx := context.WithValue(r.Context(), requestIDKey, requestID)
-			w.Header().Set("X-Request-Id", requestID)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
 	}
 }
