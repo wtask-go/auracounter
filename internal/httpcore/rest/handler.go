@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -14,9 +15,9 @@ import (
 
 // NewCounterHandler - builds main http handler for api.CounterService implementation
 func NewCounterHandler(service api.CounterService) http.Handler {
-	// if service == nil {
-	// 	panic(errors.New("rest.NewHandler: CounterService is not implemented"))
-	// }
+	if service == nil {
+		panic(errors.New("rest.NewHandler: CounterService is not implemented"))
+	}
 	r := mux.NewRouter()
 	r.NotFoundHandler = handleNotFound()
 	r.MethodNotAllowedHandler = handleMethodNotAllowed()
