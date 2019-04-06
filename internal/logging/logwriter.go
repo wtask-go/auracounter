@@ -12,44 +12,57 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Tags - enumerates available log-line tags. Pass your choice of tags to WithTags() function.
 type Tags struct {
 	Error, Info string
 }
 
-// logWriter - wrapper for standart go logger to implement loggin.Interface
+// logWriter - base unexported type to implement several loggers
 type logWriter struct {
 	mu             sync.Mutex // protects out
 	out            io.Writer  // real writer
 	prefix         string
 	timeFunc       func() time.Time       // also may define timezone
 	timeFormatFunc func(time.Time) string // also may convert time zone
-	trace          bool
+	trace          bool // flag to add or not filename/line num info into log 
 	tags           Tags
 }
 
+// logWriterOption - func to initialize unexported fields of logWriter struct 
 type logWriterOption func(*logWriter)
 
+// WithPrefix - define prefix for every log row.
 func WithPrefix(prefix string) logWriterOption {
 	return func(lw *logWriter) {
 		lw.prefix = prefix
 	}
 }
 
-func WithTimeFunc(f func() time.Time) logWriterOption {
+// withTimeFunc - define custom time function (for use in tests).
+func withTimeFunc(f func() time.Time) logWriterOption {
 	return func(lw *logWriter) {
 		lw.timeFunc = f
 	}
 }
 
+// WithTimeFormat - define custom date-time formatter for log row.
 func WithTimeFormat(f func(time.Time) string) logWriterOption {
 	return func(lw *logWriter) {
 		lw.timeFormatFunc = f
 	}
 }
 
+// WithTags - redefine log tags 
 func WithTags(tags Tags) logWriterOption {
 	return func(lw *logWriter) {
 		lw.tags = tags
+	}
+}
+
+// WithTrace - add trace info (filename and line number) into every log row.
+func WithTrace(trace bool) logWriterOption {
+	return func(lw *logWriter) {
+		lw.trace = trace
 	}
 }
 
@@ -65,62 +78,59 @@ func (lw *logWriter) apply(options ...logWriterOption) *logWriter {
 	return lw
 }
 
+// buildLogWriter - logWriter build helper
 func buildLogWriter(out io.Writer, options ...logWriterOption) *logWriter {
-	lw := &logWriter{
+	return (&logWriter{
 		out:            out,
 		timeFunc:       func() time.Time { return time.Now().UTC() },
 		timeFormatFunc: func(t time.Time) string { return t.Format("2006-01-02 03:04:05.000000") },
-		tags:           Tags{Error: "ERR", Info: "INFO"},
-	}
-	lw.apply(options...)
-	return lw
+		tags:           Tags{Error: " ERR ", Info: " INFO "},
+	}).apply(options...)
 }
 
 // ExposeLogger - returns go logger which will be write into logging out.
 func (lw *logWriter) ExposeLogger(prefix string) *log.Logger {
-	if prefix == "" {
-		prefix = lw.prefix
-	}
 	flags := 0
 	if lw.trace {
 		flags = log.Llongfile
 	}
-	return log.New(lw.out, prefix, flags)
+	return log.New(lw, prefix, flags)
 }
 
+// Write - implements io.Writer interface to help expose log.Logger.
 func (lw *logWriter) Write(bytes []byte) (int, error) {
 	lw.mu.Lock()
 	defer lw.mu.Unlock()
-	data := append([]byte(lw.prefix), []byte(lw.timeFormatFunc(lw.timeFunc()))...)
-	n, err := lw.out.Write(append(data, bytes...))
-	return n, errors.Wrap(err, "logging.stream write error")
+	log := append([]byte(lw.prefix), []byte(lw.timeFormatFunc(lw.timeFunc()))...)
+	n, err := lw.out.Write(append(log, bytes...))
+	return n, errors.Wrap(err, "logging.logWriter unable to write")
 }
 
-func (lw *logWriter) getCaller(skip int) (file string, line int) {
-	_, file, line, _ = runtime.Caller(skip)
-	return file, line
-}
-
-func (lw *logWriter) logfn(tag, format string, a ...interface{}) (int, error) {
+func (lw *logWriter) logf(tag, format string, a ...interface{}) (int, error) {
 	if strings.HasSuffix(format, "\n") {
 		format = strings.TrimSuffix(format, "\n")
 	}
-	content := fmt.Sprintf(fmt.Sprintf("%s %s", tag, format), a...)
+	content := fmt.Sprintf(fmt.Sprintf("%s%s", tag, format), a...)
 	if lw.trace {
-		f, l := lw.getCaller(3)
-		trace := fmt.Sprintf(" (%d:%s)", l, f)
-		content += trace
+		_, file, line, _ := runtime.Caller(2)
+		trace := " [%d:%q]"
+		if content == "" {
+			trace = "[%d:%q]"
+		}
+		content += fmt.Sprintf(trace, line, file)
 	}
 	content += "\n"
 	return lw.Write([]byte(content))
 }
 
-func (lw *logWriter) Errorfn(format string, a ...interface{}) error {
-	_, err := lw.logfn(lw.tags.Error, format, a...)
+// Errorf - implements logging.Facade interface 
+func (lw *logWriter) Errorf(format string, a ...interface{}) error {
+	_, err := lw.logf(lw.tags.Error, format, a...)
 	return err
 }
 
-func (lw *logWriter) Infofn(format string, a ...interface{}) error {
-	_, err := lw.logfn(lw.tags.Info, format, a...)
+// Infof - implements logging.Facade interface
+func (lw *logWriter) Infof(format string, a ...interface{}) error {
+	_, err := lw.logf(lw.tags.Info, format, a...)
 	return err
 }

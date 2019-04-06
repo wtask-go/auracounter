@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/wtask-go/auracounter/internal/logging"
 
 	"github.com/wtask-go/auracounter/internal/counter"
 	"github.com/wtask-go/auracounter/internal/counter/datastore/mysql"
@@ -24,7 +25,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	l := log.New(os.Stdout, "auraserver ", log.LUTC|log.Ldate|log.Lmicroseconds|log.Ltime)
+	logger := logging.NewStdOut(logging.WithPrefix("aurasrv "), logging.WithTrace(false))
+	defer logger.Close()
+
+	logger.Infof("Server is starting ...")
+	logger.Errorf("Check log has %s tag", "ERR")
+
+	// l := log.New(os.Stdout, "auraserver ", log.LUTC|log.Ldate|log.Lmicroseconds|log.Ltime)
+	l := logger.ExposeLogger(" ")
 	l.Println("Hello!")
 
 	storage := storageFactory(cfg)

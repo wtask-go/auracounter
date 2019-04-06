@@ -27,16 +27,16 @@ func (c Chain) eachFacade(visit func(f Facade)) {
 	wg.Wait()
 }
 
-// Infofn - logging.Facade implementation.
+// Infof - logging.Facade implementation.
 // Visits chained items and calls its Infof() method.
-func (c Chain) Infofn(format string, a ...interface{}) {
-	c.eachFacade(func(f Facade) { f.Infofn(format, a...) })
+func (c Chain) Infof(format string, a ...interface{}) {
+	c.eachFacade(func(f Facade) { f.Infof(format, a...) })
 }
 
 // Errorfn - logging.Facade implementation.
 // Visits chained items and calls its Errorf() method.
-func (c Chain) Errorfn(format string, a ...interface{}) {
-	c.eachFacade(func(f Facade) { f.Errorfn(format, a...) })
+func (c Chain) Errorf(format string, a ...interface{}) {
+	c.eachFacade(func(f Facade) { f.Errorf(format, a...) })
 }
 
 // Close - closes all logging interfaces in the chain
