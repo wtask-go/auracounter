@@ -1,5 +1,5 @@
 # auracounter
-Application set to maintain for distributed cyclic counter:
+The set of applications to maintain of distributed cyclic counter:
 
 * REST-like RPC server to manage and deal with distributed counter. Server binds counter ID (cid), so you can run multiple instances to support single counter.
 * CLI support may appear
