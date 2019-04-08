@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/wtask-go/auracounter/internal/config"
 	"github.com/wtask-go/auracounter/internal/logging"
 
 	"github.com/wtask-go/auracounter/internal/counter"
@@ -18,50 +19,37 @@ import (
 )
 
 func main() {
-
-	cfg, err := configureFromCLI()
-	if err != nil {
-		fmt.Println("STARTUP ERROR:", err)
-		os.Exit(1)
-	}
-
 	logger := logging.NewStdOut(logging.WithPrefix("aurasrv "), logging.WithTrace(false))
 	defer logger.Close()
 
 	logger.Infof("Server is starting ...")
-	logger.Errorf("Check log has %s tag", "ERR")
 
-	// l := log.New(os.Stdout, "auraserver ", log.LUTC|log.Ldate|log.Lmicroseconds|log.Ltime)
-	l := logger.ExposeLogger(" ")
-	l.Println("Hello!")
-
-	storage := storageFactory(cfg)
+	storage := storageFactory(conf)
 	defer storage.Close()
 	service := counter.NewCounterService(storage.Repository())
-	handleREST := rest.NewCounterHandler(service)
-	server := newServer(cfg.ServerAddress, cfg.ServerPort, handleREST)
+	server := newServer(conf, rest.NewCounterHandler(service))
 
 	shutdown, err := httpcore.LaunchServer(server, 3*time.Second)
 	if err != nil {
-		l.Println("ERR:", err)
+		logger.Errorf("Can't launch server: %v", err)
 		os.Exit(1)
 	}
-	l.Println("INFO:", "server successfully started")
+	logger.Infof("Server is ready!")
 
 	sig := make(chan os.Signal)
 	signal.Notify(sig, os.Interrupt)
 	<-sig
 	if err := shutdown(10 * time.Second); err != nil {
-		l.Println("ERR:", err)
+		logger.Errorf("Server shutdown failed: %v", err)
 	}
-	l.Println("Bye!")
+	logger.Infof("Server has stopped :( bye!")
 }
 
-func storageFactory(cfg *Config) counter.Storage {
+func storageFactory(cfg *config.Application) counter.Storage {
 	r, err := mysql.NewStorage(
-		mysql.WithDSN(cfg.StorageDSN),
+		mysql.WithDSN(cfg.CounterDB.DSN()),
 		mysql.WithCounterID(cfg.CounterID),
-		mysql.WithTablePrefix("aura_"),
+		mysql.WithTablePrefix(cfg.CounterDB.TablePrefix),
 	)
 	if err != nil {
 		panic(err)
@@ -69,9 +57,9 @@ func storageFactory(cfg *Config) counter.Storage {
 	return r
 }
 
-func newServer(addr string, port int, handler http.Handler) *http.Server {
+func newServer(cfg *config.Application, handler http.Handler) *http.Server {
 	return &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", addr, port),
+		Addr:    fmt.Sprintf("%s:%d", cfg.CounterREST.Host, cfg.CounterREST.Port),
 		Handler: handler,
 		// ErrorLog:     l,
 		ReadTimeout:  5 * time.Second,
