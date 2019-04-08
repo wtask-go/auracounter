@@ -55,6 +55,7 @@ func TestNewApplicationConfig(t *testing.T) {
 				CounterREST: config.HTTPServer{
 					Host: "", 
 					Port: 33333,
+					BaseURI: "/counter/v1/",
 				},
 				CounterDB: config.Database{
 					Type:        "mysql",
@@ -77,6 +78,7 @@ func TestNewApplicationConfig(t *testing.T) {
 				CounterREST: config.HTTPServer{
 					Host: "", 
 					Port: 33333,
+					BaseURI: "/counter/v1/",
 				},
 				CounterDB: config.Database{
 					Type:        "mysql",

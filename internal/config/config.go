@@ -6,8 +6,9 @@ import (
 
 // HTTPServer - minimal config to start Go HTTP server
 type HTTPServer struct {
-	Host string
-	Port int
+	Host    string
+	Port    int
+	BaseURI string
 }
 
 // Database - db configuration
@@ -30,7 +31,7 @@ type Application struct {
 	CounterREST HTTPServer
 	CounterDB   Database
 	// CounterID - maintained counter ID
-	CounterID   int
+	CounterID int
 }
 
 // DSN - formats connection string based on configuration.

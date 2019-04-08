@@ -32,8 +32,9 @@ func NewApplicationConfig(prefix string) (cfg *config.Application, err error) {
 	}
 	return &config.Application{
 		CounterREST: config.HTTPServer{
-			Host: optionalString(p("REST_HOST"), ""),
-			Port: optionalInt(p("REST_PORT"), 33333),
+			Host:    optionalString(p("REST_HOST"), ""),
+			Port:    optionalInt(p("REST_PORT"), 33333),
+			BaseURI: optionalString(p("REST_BASE_URI"), "/counter/v1/"),
 		},
 		CounterDB: config.Database{
 			Type:        "mysql",
