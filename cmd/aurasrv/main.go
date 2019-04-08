@@ -7,13 +7,15 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/wtask-go/auracounter/internal/httpcore/rest"
+
+	"github.com/wtask-go/auracounter/internal/api"
+
 	"github.com/wtask-go/auracounter/internal/config"
 	"github.com/wtask-go/auracounter/internal/logging"
 
 	"github.com/wtask-go/auracounter/internal/counter"
 	"github.com/wtask-go/auracounter/internal/counter/datastore/mysql"
-
-	"github.com/wtask-go/auracounter/internal/httpcore/rest"
 
 	"github.com/wtask-go/auracounter/internal/httpcore"
 )
@@ -26,8 +28,7 @@ func main() {
 
 	storage := storageFactory(conf)
 	defer storage.Close()
-	service := counter.NewCounterService(storage.Repository())
-	server := newServer(conf, rest.NewCounterHandler(service))
+	server := newRESTServer(conf, counter.NewCounterService(storage.Repository()))
 
 	shutdown, err := httpcore.LaunchServer(server, 3*time.Second)
 	if err != nil {
@@ -57,10 +58,10 @@ func storageFactory(cfg *config.Application) counter.Storage {
 	return r
 }
 
-func newServer(cfg *config.Application, handler http.Handler) *http.Server {
+func newRESTServer(cfg *config.Application, service api.CounterService) *http.Server {
 	return &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", cfg.CounterREST.Host, cfg.CounterREST.Port),
-		Handler: handler,
+		Handler: rest.NewCounterHandler(cfg.CounterREST.BaseURI, service),
 		// ErrorLog:     l,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,

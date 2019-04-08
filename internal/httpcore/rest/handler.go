@@ -14,7 +14,7 @@ import (
 )
 
 // NewCounterHandler - builds main http handler for api.CounterService implementation
-func NewCounterHandler(service api.CounterService) http.Handler {
+func NewCounterHandler(baseURI string, service api.CounterService) http.Handler {
 	if service == nil {
 		panic(errors.New("rest.NewHandler: CounterService is not implemented"))
 	}
@@ -23,7 +23,7 @@ func NewCounterHandler(service api.CounterService) http.Handler {
 	r.MethodNotAllowedHandler = handleMethodNotAllowed()
 
 	{
-		v1 := r.PathPrefix("/counter/v1/").Subrouter()
+		v1 := r.PathPrefix(baseURI).Subrouter()
 
 		v1.NewRoute().
 			Path("/getnumber/").
