@@ -20,9 +20,13 @@ go version go1.12.1 windows/amd64
 ```
 > go install github.com/joho/godotenv
 ```
+
 3. Clone or downlod application repository https://github.com/wtask-go/auracounter
 
+
 > You may use any local directory as far as `auracounter` is go-module
+
+4. Install docker and docker-compose
 
 # Runing in dev-environment
 
