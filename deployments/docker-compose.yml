@@ -1,0 +1,18 @@
+version: "3"
+services:
+  mysql:
+    container_name: mysql-server
+    image: mysql:latest
+    command: --default-authentication-plugin=mysql_native_password    
+    ports:
+      - 3306:3306
+    restart: always
+    # env_file: ./
+    environment:
+    # Use tools like godotenv (github.com/joho/godotenv), to load environment before docker-compose.
+    # Inastall: go install github.com/joho/godotenv
+    # Check config: godotenv -f ./config.dev.env docker-compose config
+      MYSQL_DATABASE: ${AURA_COUNTER_DB_NAME}
+      MYSQL_USER: ${AURA_COUNTER_DB_USER}
+      MYSQL_PASSWORD: ${AURA_COUNTER_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: "rootpassword"
