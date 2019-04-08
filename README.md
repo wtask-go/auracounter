@@ -22,15 +22,15 @@ Check API documentation and examples at https://documenter.getpostman.com/view/6
 
 Use previously installed `godotenv`to start needed containers and to run REST-server.
 
-1. Dive into project root and start dependencies:
+1. Dive into project root and start server environment:
 
 ```
 > godotenv -f ./deployments/config.dev.env docker-compose -f ./deployments/docker-compose.yml up -d
 ```
 
-At first time, you should wait until MySQL container will start. You may check progress open docker-compose logs.
+At first time, you should wait until MySQL container will start. You may check progress by open docker-compose logs.
 
-2. Run RPC-server in CLI, press Ctrl+C to stop server:
+2. Run RPC-server in console, press Ctrl+C to stop server:
 
 ```
 > godotenv -f ./deployments/config.dev.env go run ./cmd/aurasrv/.
@@ -44,9 +44,15 @@ aurasrv 2019-04-08 12:07:43.634081 INFO Server has stopped, bye ( ᴗ_ ᴗ)
 ```
 When the server is running you can use [Postman](https://www.getpostman.com/) or other http-client to work with server API. Check [API docs](https://github.com/wtask-go/auracounter).
 
+Also, you can get help from the server in console:
+
+```
+> go run ./cmd/aurasrv/. -h
+```
+
 3. Stop environment
 
-If you want to start/stop server environment fast, run:
+If you want to stop/start server environment fast, run:
 
 ```
 > docker-compose -f .\deployments\docker-compose.yml stop
@@ -67,7 +73,7 @@ Or to remove all used containers from your host:
 # Feature plans
 
 * Log server requests and errors with logging.Facage
-* Add support for OPTIONS method (HTTP)
+* Add support for OPTIONS method (HTTP) to expose API
 * Add support for `make`
 * Add integration test for MySQL-repository
 * Add test for whole server
