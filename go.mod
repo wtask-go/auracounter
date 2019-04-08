@@ -11,8 +11,10 @@ require (
 	github.com/jinzhu/gorm v1.9.2
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/jinzhu/now v1.0.0 // indirect
+	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.0.0 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0 // indirect
 	github.com/pkg/errors v0.8.1
+	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2
 	google.golang.org/appengine v1.5.0 // indirect
 )
