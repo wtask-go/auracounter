@@ -36,21 +36,22 @@ func init() {
 	if !flag.Parsed() {
 		flag.Parse()
 	}
+	out := flag.CommandLine.Output()
 	if help {
-		fmt.Fprintf(flag.CommandLine.Output(), usage)
+		fmt.Fprintf(out, usage)
 		flag.Usage()
 		os.Exit(0)
 	}
 	if envFile != "" {
 		if  err = godotenv.Load(envFile); err != nil {
-			fmt.Fprintf(flag.CommandLine.Output(), "Can not load environment (%s): %s\n", envFile, err)
+			fmt.Fprintf(out, "Can not load environment (%s): %s\n", envFile, err)
 			os.Exit(1)
 		}
 	}
 
 	if conf, err = env.NewApplicationConfig(envVarPrefix); err != nil {
-		fmt.Fprintf(flag.CommandLine.Output(), "Can not prepare config: %s\n", err)
-		fmt.Fprintf(flag.CommandLine.Output(), "Check usage with -help option. \n")
+		fmt.Fprintf(out, "Can not prepare config: %s\n", err)
+		fmt.Fprintf(out, "Check usage with -help option. \n")
 		os.Exit(1)	
 	}
 }
