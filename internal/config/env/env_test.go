@@ -47,6 +47,7 @@ func TestNewApplicationConfig(t *testing.T) {
 		expConfig *config.Application
 	} {
 		{
+			// may need to remove this test due probably it can overwrite real environment
 			"correct.env", 
 			"",
 			"",
@@ -70,7 +71,7 @@ func TestNewApplicationConfig(t *testing.T) {
 		},
 		{
 			"correct-with-prefix.env", 
-			"AURA_",
+			"ENVTEST_",
 			"",
 			&config.Application{
 				CounterREST: config.HTTPServer{
@@ -91,7 +92,7 @@ func TestNewApplicationConfig(t *testing.T) {
 			},
 		},
 		{
-			"incorrect-due-prefix.env", "AURA_", "error: \"AURA_COUNTER_ID\" is required (int)", nil,
+			"incorrect-due-prefix.env", "ENVTEST_", "error: \"ENVTEST_COUNTER_ID\" is required (int)", nil,
 		},
 		{
 			"incorrect-due-rest-port.env", "", "error: optional \"COUNTER_REST_PORT\" is expected as int", nil,
