@@ -9,18 +9,24 @@ Check API documentation and examples at https://documenter.getpostman.com/view/6
 
 # Prerequisites
 
-1. It is highly desirable to install a simple and convenient `godotenv` utility to run applications with a given set of environment variables:
+1. Used GO version:
+
+```
+go version go1.12.1 windows/amd64
+```
+
+2. It is highly desirable to install a simple and convenient `godotenv` utility to run applications with a given set of environment variables:
 
 ```
 > go install github.com/joho/godotenv
 ```
-2. Clone or downlod application repository https://github.com/wtask-go/auracounter
+3. Clone or downlod application repository https://github.com/wtask-go/auracounter
 
 > You may use any local directory as far as `auracounter` is go-module
 
 # Runing in dev-environment
 
-Use previously installed `godotenv`to start needed containers and to run REST-server.
+Use previously installed `godotenv` to start dependencies and to run REST-server.
 
 1. Dive into project root and start server environment:
 
