@@ -42,7 +42,7 @@ func main() {
 	if err := shutdown(10 * time.Second); err != nil {
 		logger.Errorf("Server shutdown failed: %v", err)
 	}
-	logger.Infof("Server has stopped :( bye!")
+	logger.Infof("Server has stopped, bye ( ᴗ_ ᴗ)")
 }
 
 func storageFactory(cfg *config.Application) counter.Storage {
