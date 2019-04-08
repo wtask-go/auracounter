@@ -83,5 +83,6 @@ Or to remove all used containers from your host:
 * Add support for `make`
 * Add integration test for MySQL-repository
 * Add test for whole server
+* Add missing docs and fix outdated comments or typos
 
 ...
