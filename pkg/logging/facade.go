@@ -3,8 +3,6 @@ package logging
 import (
 	"fmt"
 	"log"
-
-	"github.com/pkg/errors"
 )
 
 // SeverityLevel - severity level, used to decorate log rows
@@ -64,16 +62,6 @@ func (f *facade) apply(options ...facadeOption) *facade {
 		}
 	}
 	return f
-}
-
-// WithDecoration - set decorator to format log messages.
-func WithDecoration(d MessageDecorator) facadeOption {
-	if d == nil {
-		panic(errors.New("logging: can not use nil as MessageDecorator"))
-	}
-	return func(l *facade) {
-		l.decorator = d
-	}
 }
 
 func (f *facade) println(level SeverityLevel, message string, idleFrames int) {
