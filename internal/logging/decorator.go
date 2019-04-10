@@ -3,8 +3,6 @@ package logging
 import (
 	"fmt"
 	"time"
-	"unicode"
-	"unicode/utf8"
 )
 
 var severities = [...]string{
@@ -42,14 +40,4 @@ func DefaultVerbosity(prefix string, timer func() time.Time) MessageDecorator {
 			message,
 		)
 	}
-}
-
-func firstRuneIsSpace(s *string) bool {
-	r, _ := utf8.DecodeRuneInString(*s)
-	return unicode.IsSpace(r)
-}
-
-func lastRuneIsSpace(s *string) bool {
-	r, _ := utf8.DecodeLastRuneInString(*s)
-	return unicode.IsSpace(r)
 }
