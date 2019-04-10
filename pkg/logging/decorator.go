@@ -20,9 +20,9 @@ var severities = [...]string{
 //
 // "*`{prefix}` *`{YYYY-MM-DD hh:mm:ss.xxxxx}` *`{severity level tag}` :`{message}`"
 //
-// `prefix` - component, app or channel name to help filter logs in the future;
+// `prefix` - name of component, app or channel which helps to filter logs in the future;
 //
-// `timer` - optional current time generator, nil-timer is ignored.
+// `timer` - optional generator of current time.
 // If you need a constant timestamp for log (inside tests, for example)
 // or to check time for specific timezone or change date-time format,
 // pass a specific timer here. Otherwise, pass nil to use default UTC timer.

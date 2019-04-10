@@ -76,6 +76,10 @@ func WithDecoration(d MessageDecorator) facadeOption {
 }
 
 func (f *facade) println(level SeverityLevel, message string, idleFrames int) {
+	if f.decorator == nil {
+		// can't print any content without decoration
+		return
+	}
 	message = f.decorator(level, message, idleFrames)
 	if message == "" {
 		return

@@ -1,7 +1,14 @@
 /*
-Package logging provides a logging interface and its implementations are used in the application.
+Package logging exposes common logging facade and interface to manage and to use loggers with application.
 
-It is allow to isolate the application from external dependencies
-and postpone the choice of logging libraries for later.
+Provides several ready and easy customizable loggers, which output targets are:
+
+	- stdout
+	- stderr
+	- null
+	- bytes buffer
+	- local file
+
+All loggers support decorators to make format of your log rows highly customizable.
 */
 package logging
