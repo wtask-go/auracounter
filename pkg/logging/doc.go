@@ -1,7 +1,7 @@
 /*
-Package logging exposes common logging facade and interface to manage and to use loggers with application.
+Package logging exposes common logging facade and interface to manage and to use loggers within application.
 
-Provides several ready and easy customizable loggers, which output targets are:
+It provides several lightweight and customizable loggers, which output targets are:
 
 	- stdout
 	- stderr
@@ -9,6 +9,7 @@ Provides several ready and easy customizable loggers, which output targets are:
 	- bytes buffer
 	- local file
 
-All loggers support decorators to make format of your log rows highly customizable.
+All provided loggers support decorators to make format of your log rows highly customizable.
+All loggers use system log.Logger as backend, except already planned syslog logger.
 */
 package logging

@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// SeverityLevel - severity level, used to decorate log rows 
+// SeverityLevel - severity level, used to decorate log rows
 type SeverityLevel int
 
 const (
@@ -17,7 +17,7 @@ const (
 	// AlertLevel - alert messages.
 	// Wikipedia: A condition that should be corrected immediately, such as a corrupted system database.
 	AlertLevel
-	// CriticalLevel - critical messages. 
+	// CriticalLevel - critical messages.
 	// Wikipedia: Critical conditions. Hard device errors.
 	CriticalLevel
 	// ErrorLevel - error messages.
@@ -38,34 +38,35 @@ type (
 	// MessageDecorator - finally decorates message before it will be written into log.
 	// It can includes time/date special formatting, level translation and so on.
 	//
-	// `level` - severity level to translate into string if you want; 
-	// 
+	// `level` - severity level to translate into string if you want;
+	//
 	// `message` - source message to write into log;
-	// 
+	//
 	// `idleFrames` - number of runtime frames you want to skip if your decorator adds trace info.
 	MessageDecorator func(level SeverityLevel, message string, idleFrames int) string
 
 	// facade - base unexported type to expose several loggers
 	facade struct {
 		decorator MessageDecorator
-		printer *log.Logger // backend is ready to concurrency
+		printer   *log.Logger // backend is ready to concurrency
 	}
 
-	facadeOption = func(l *facade)
+	facadeOption = func(f *facade)
 )
 
-func (l *facade) apply(options ...facadeOption) *facade {
-	if l == nil {
+func (f *facade) apply(options ...facadeOption) *facade {
+	if f == nil {
 		return nil
 	}
 	for _, o := range options {
 		if o != nil {
-			o(l)
+			o(f)
 		}
 	}
-	return l
+	return f
 }
 
+// WithDecoration - set decorator to format log messages.
 func WithDecoration(d MessageDecorator) facadeOption {
 	if d == nil {
 		panic(errors.New("logging: can not use nil as MessageDecorator"))
@@ -87,10 +88,12 @@ func (f *facade) println(level SeverityLevel, message string, idleFrames int) {
 	f.printer.Println(message)
 }
 
+// Errorf - writes error-level message into log.
 func (f *facade) Errorf(format string, a ...interface{}) {
 	f.println(ErrorLevel, fmt.Sprintf(format, a...), 3)
 }
 
+// Infof - writes informational message into log.
 func (f *facade) Infof(format string, a ...interface{}) {
 	f.println(InfoLevel, fmt.Sprintf(format, a...), 3)
 }
