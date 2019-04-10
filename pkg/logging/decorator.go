@@ -3,6 +3,8 @@ package logging
 import (
 	"fmt"
 	"time"
+	"unicode"
+	"unicode/utf8"
 )
 
 var severities = [...]string{
@@ -18,20 +20,31 @@ var severities = [...]string{
 
 // DefaultVerbosity - returns decorator which prepare message like this:
 //
-// "*`{prefix}` *`{YYYY-MM-DD hh:mm:ss.xxxxx}` *`{severity level tag}` :`{message}`"
+// `prefix [YYYY-MM-DD hh:mm:ss.xxxxx] level message`
 //
-// `prefix` - name of component, app or channel which helps to filter logs in the future;
+// `prefix` - name of component, app or channel which helps to filter logs in the future.
+// Empty prefix will be replaced with `*`.
 //
 // `timer` - optional generator of current time.
 // If you need a constant timestamp for log (inside tests, for example)
 // or to check time for specific timezone or change date-time format,
 // pass a specific timer here. Otherwise, pass nil to use default UTC timer.
 func DefaultVerbosity(prefix string, timer func() time.Time) MessageDecorator {
+	if prefix == "" {
+		prefix = "*"
+	}
+	if !lastRuneIsSpace(&prefix) {
+		prefix += " "
+	}
 	return func(level SeverityLevel, message string, _ int) string {
 		if timer == nil {
 			timer = time.Now().UTC
 		}
-		format := "*%s *%s *%s :%s"
+		format := "%s[%s] %s"
+		if !firstRuneIsSpace(&message) {
+			format += " "
+		}
+		format += "%s"
 		return fmt.Sprintf(
 			format,
 			prefix,
@@ -40,4 +53,14 @@ func DefaultVerbosity(prefix string, timer func() time.Time) MessageDecorator {
 			message,
 		)
 	}
+}
+
+func firstRuneIsSpace(s *string) bool {
+	r, _ := utf8.DecodeRuneInString(*s)
+	return unicode.IsSpace(r)
+}
+
+func lastRuneIsSpace(s *string) bool {
+	r, _ := utf8.DecodeLastRuneInString(*s)
+	return unicode.IsSpace(r)
 }
