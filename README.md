@@ -48,9 +48,9 @@ At first time, you should wait until MySQL container will start. You may check p
 You should see something like this:
 
 ```
-aurasrv 2019-04-08 12:00:59.389758 INFO Server is starting ...
-aurasrv 2019-04-08 12:01:02.429265 INFO Server is ready!
-aurasrv 2019-04-08 12:07:43.634081 INFO Server has stopped, bye ( ᴗ_ ᴗ)
+aurasrv [2019-04-10 22:28:08.469356] INFO Server is starting ...
+aurasrv [2019-04-10 22:28:08.469356] INFO Server is ready!
+aurasrv [2019-04-10 22:28:08.469356] INFO Server has stopped, bye ( ᴗ_ ᴗ)
 ```
 When the server is running you can use [Postman](https://www.getpostman.com/) or other http-client to work with server API. Check [API docs](https://github.com/wtask-go/auracounter).
 

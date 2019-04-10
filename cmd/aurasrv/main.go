@@ -7,12 +7,13 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/wtask-go/auracounter/pkg/logging"
+
 	"github.com/wtask-go/auracounter/internal/httpcore/rest"
 
 	"github.com/wtask-go/auracounter/internal/api"
 
 	"github.com/wtask-go/auracounter/internal/config"
-	"github.com/wtask-go/auracounter/internal/logging"
 
 	"github.com/wtask-go/auracounter/internal/counter"
 	"github.com/wtask-go/auracounter/internal/counter/datastore/mysql"
@@ -21,7 +22,7 @@ import (
 )
 
 func main() {
-	logger := logging.NewStdOut(logging.WithPrefix("aurasrv "), logging.WithTrace(false))
+	logger := logging.NewStdout(logging.WithDecoration(logging.DefaultVerbosity("aurasrv", nil)))
 	defer logger.Close()
 
 	logger.Infof("Server is starting ...")
