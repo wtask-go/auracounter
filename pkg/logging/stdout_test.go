@@ -7,10 +7,8 @@ import (
 
 func ExampleNewStdout_withPrefix() {
 	logger := NewStdout(
-		WithDecoration(
-			// constant zero-time expected
-			DefaultVerbosity("test", func() time.Time { return time.Time{} }),
-		),
+		// blow out current time
+		WithDefaultDecoration("test", func() time.Time { return time.Time{} }),
 	)
 	defer logger.Close()
 	logger.Infof("event-1 occurred")
@@ -28,10 +26,8 @@ func ExampleNewStdout_withPrefix() {
 
 func ExampleNewStdout_withoutPrefix() {
 	logger := NewStdout(
-		WithDecoration(
-			// constant zero-time expected
-			DefaultVerbosity("", func() time.Time { return time.Time{} }),
-		),
+		// blow out current time
+		WithDefaultDecoration("", func() time.Time { return time.Time{} }),
 	)
 	defer logger.Close()
 	logger.Infof("event-1 occurred")
@@ -40,10 +36,10 @@ func ExampleNewStdout_withoutPrefix() {
 	logger.Errorf("error #%d occurred", 2)
 
 	// Output:
-	// * [0001-01-01 00:00:00.000000] INFO event-1 occurred
-	// * [0001-01-01 00:00:00.000000] INFO event #2 occurred
-	// * [0001-01-01 00:00:00.000000] ERR error-1 occurred
-	// * [0001-01-01 00:00:00.000000] ERR error #2 occurred
+	// [0001-01-01 00:00:00.000000] INFO event-1 occurred
+	// [0001-01-01 00:00:00.000000] INFO event #2 occurred
+	// [0001-01-01 00:00:00.000000] ERR error-1 occurred
+	// [0001-01-01 00:00:00.000000] ERR error #2 occurred
 	//
 }
 
@@ -82,10 +78,8 @@ func ExampleNewStdout_customDecoration() {
 
 func ExampleNewStdout_asFacade() {
 	logger := NewStdout(
-		WithDecoration(
-			// constant zero-time expected
-			DefaultVerbosity("test", func() time.Time { return time.Time{} }),
-		),
+		// blow out current time
+		WithDefaultDecoration("test", func() time.Time { return time.Time{} }),
 	)
 	defer logger.Close()
 

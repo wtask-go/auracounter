@@ -48,25 +48,12 @@ type (
 		decorator MessageDecorator
 		printer   *log.Logger // backend is ready to concurrency
 	}
-
-	facadeOption = func(f *facade)
 )
 
-func (f *facade) apply(options ...facadeOption) *facade {
-	if f == nil {
-		return nil
-	}
-	for _, o := range options {
-		if o != nil {
-			o(f)
-		}
-	}
-	return f
-}
-
 func (f *facade) println(level SeverityLevel, message string, idleFrames int) {
-	if f.decorator == nil {
-		// can't print any content without decoration
+	if f == nil || f.printer == nil || f.decorator == nil {
+		// can't print any content without printer and decorator,
+		// so nil receiver is a Null logging facade and works as expected
 		return
 	}
 	message = f.decorator(level, message, idleFrames)

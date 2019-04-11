@@ -1,58 +1,86 @@
 package logging
 
 import (
+	"bytes"
 	"io"
-	"io/ioutil"
-	"log"
 	"os"
 )
 
-// stream - base type for all streaming loggers
+// stream - base type for all streaming loggers.
 type stream struct {
 	*facade
 	closer io.Closer
 }
 
-// Close - close and free logging stream
+// Close - close logging stream.
 func (s *stream) Close() error {
-	if s.closer != nil {
+	if s != nil && s.closer != nil {
 		return s.closer.Close()
 	}
 	return nil
 }
 
-// buildStream - builder for any streming logger.
-func buildStream(writer io.Writer, closer io.Closer, options ...facadeOption) Interface {
-	return &stream{
-		closer: closer,
-		facade: (&facade{
-			printer:   log.New(writer, "", 0),
-			decorator: DefaultVerbosity("", nil),
-		}).apply(options...),
+// apply - apply given options for stream.
+func (s *stream) apply(options ...streamOption) *stream {
+	if s == nil {
+		return nil
 	}
+	for _, o := range options {
+		if o != nil {
+			o(s)
+		}
+	}
+	return s
+}
+
+// buildStream - private builder.
+func buildStream(options ...streamOption) *stream {
+	return (&stream{facade: &facade{}}).apply(options...)
 }
 
 // NewStdout - creates logger with stdout as writing target.
-func NewStdout(options ...facadeOption) Interface {
-	return buildStream(os.Stdout, nil, options...)
+//
+// Without options logger uses default decoration for log rows:
+// `[YYYY-MM-DD hh:mm:ss.xxxxx] severity_tag message`.
+func NewStdout(options ...streamOption) Interface {
+	// return buildStream(os.Stdout, nil, options...)
+	return buildStream(
+		withPrintTarget(os.Stdout),
+		withCloser(nil),
+		WithDefaultDecoration("", nil),
+	).apply(options...)
 }
 
 // NewStderr - creates logger with stderr as writing target.
-func NewStderr(options ...facadeOption) Interface {
-	return buildStream(os.Stderr, nil, options...)
+//
+// Without options logger uses default decoration for log rows:
+// `[YYYY-MM-DD hh:mm:ss.xxxxx] severity_tag message`.
+func NewStderr(options ...streamOption) Interface {
+	return buildStream(
+		withPrintTarget(os.Stderr),
+		withCloser(nil),
+		WithDefaultDecoration("", nil),
+	).apply(options...)
 }
 
-// NewNull - creates silent logger without real output.
+// NewNull - creates logger without any output.
 func NewNull() Interface {
-	return buildStream(ioutil.Discard, nil, func(f *facade) { f.decorator = nil })
+	return (&stream{facade: &facade{}})
 }
 
 // NewBuffer - creates logger which writes into external buffer. Useful for tests.
-func NewBuffer(buffer *[]byte, options ...facadeOption) Interface {
-	return nil
+//
+// Without options logger uses default decoration for log rows:
+// `[YYYY-MM-DD hh:mm:ss.xxxxx] severity_tag message`.
+func NewBuffer(buffer *bytes.Buffer, options ...streamOption) Interface {
+	return buildStream(
+		withPrintTarget(buffer),
+		withCloser(nil),
+		WithDefaultDecoration("", nil),
+	).apply(options...)
 }
 
 // NewFile - creates logger which writes log into file.
-func NewFile(filename string, options ...facadeOption) Interface {
-	return nil
+func NewFile(filename string, options ...streamOption) Interface {
+	return nil // TODO implement print to file
 }
