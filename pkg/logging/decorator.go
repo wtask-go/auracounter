@@ -6,6 +6,33 @@ import (
 	"unicode/utf8"
 )
 
+// SeverityLevel - severity level, used to decorate log rows
+type SeverityLevel int
+
+const (
+	// EmergencyLevel - emergency messages.
+	// Wikipedia: System is unusable. A panic condition.
+	EmergencyLevel SeverityLevel = iota
+	// AlertLevel - alert messages.
+	// Wikipedia: A condition that should be corrected immediately, such as a corrupted system database.
+	AlertLevel
+	// CriticalLevel - critical messages.
+	// Wikipedia: Critical conditions. Hard device errors.
+	CriticalLevel
+	// ErrorLevel - error messages.
+	ErrorLevel
+	// WarningLevel - warning messages.
+	WarningLevel
+	// NoticeLevel - notice messages.
+	// Wikipedia: Conditions that are not error conditions, but that may require special handling.
+	NoticeLevel
+	// InfoLevel - informational messages.
+	InfoLevel
+	// DebugLevel - debug messages.
+	// Wikipedia: Messages that contain information normally of use only when debugging a program.
+	DebugLevel
+)
+
 // Decorator - formats message before it will be written into log.
 // It can includes time/date special formatting, level translation and so on.
 //
