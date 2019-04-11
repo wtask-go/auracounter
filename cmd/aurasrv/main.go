@@ -22,7 +22,7 @@ import (
 )
 
 func main() {
-	logger := logging.NewStdout(logging.WithDecoration(logging.DefaultVerbosity("aurasrv", nil)))
+	logger := logging.NewStdout(logging.WithDefaultDecoration("aurasrv", nil))
 	defer logger.Close()
 
 	logger.Infof("Server is starting ...")

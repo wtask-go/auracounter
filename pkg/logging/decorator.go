@@ -2,10 +2,19 @@ package logging
 
 import (
 	"fmt"
-	"time"
 	"unicode"
 	"unicode/utf8"
 )
+
+// Decorator - formats message before it will be written into log.
+// It can includes time/date special formatting, level translation and so on.
+//
+// `level` - severity level to translate into string if you want;
+//
+// `message` - source message to write into log;
+//
+// `idleFrames` - number of runtime frames you want to skip if your decorator adds trace info.
+type Decorator func(level SeverityLevel, message string, idleFrames int) string
 
 // severities - default severity levels naming
 var severities = [...]string{
@@ -19,22 +28,18 @@ var severities = [...]string{
 	DebugLevel:     "DEBUG",
 }
 
-// defaultVerbosity - returns decorator which prepare message like this:
+// defaultDecorator - returns decorator which prepare message like this:
 //
 // `prefix [YYYY-MM-DD hh:mm:ss.xxxxx] level message`
 //
 // `prefix` - name of component, app or channel which helps to filter logs in the future.
 //
-// `timer` - optional generator of current time.
-// If you need a constant timestamp for log (inside tests, for example)
-// or to check time for specific timezone or change date-time format,
-// pass a specific timer here. Otherwise, pass nil to use default UTC timer.
-func defaultVerbosity(prefix string, timer func() time.Time) MessageDecorator {
+// `timeFormat` - go time format pattern.
+//
+// `timer` - optional time formatter.
+func defaultDecorator(prefix string, timer *Timer) Decorator {
 	if prefix != "" && !lastRuneIsSpace(&prefix) {
 		prefix += " "
-	}
-	if timer == nil {
-		timer = time.Now().UTC
 	}
 	return func(level SeverityLevel, message string, _ int) string {
 		format := "%s[%s] %s"
@@ -45,7 +50,7 @@ func defaultVerbosity(prefix string, timer func() time.Time) MessageDecorator {
 		return fmt.Sprintf(
 			format,
 			prefix,
-			timer().Format("2006-01-02 15:04:05.000000"),
+			timer.String(),
 			severities[level],
 			message,
 		)

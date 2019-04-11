@@ -8,7 +8,7 @@ import (
 func ExampleNewStdout_withPrefix() {
 	logger := NewStdout(
 		// blow out current time
-		WithDefaultDecoration("test", func() time.Time { return time.Time{} }),
+		WithDefaultDecoration("test", &Timer{func() time.Time { return time.Time{} }, DefaultTimeFormat}),
 	)
 	defer logger.Close()
 	logger.Infof("event-1 occurred")
@@ -27,7 +27,7 @@ func ExampleNewStdout_withPrefix() {
 func ExampleNewStdout_withoutPrefix() {
 	logger := NewStdout(
 		// blow out current time
-		WithDefaultDecoration("", func() time.Time { return time.Time{} }),
+		WithDefaultDecoration("", &Timer{func() time.Time { return time.Time{} }, DefaultTimeFormat}),
 	)
 	defer logger.Close()
 	logger.Infof("event-1 occurred")
@@ -40,6 +40,30 @@ func ExampleNewStdout_withoutPrefix() {
 	// [0001-01-01 00:00:00.000000] INFO event #2 occurred
 	// [0001-01-01 00:00:00.000000] ERR error-1 occurred
 	// [0001-01-01 00:00:00.000000] ERR error #2 occurred
+	//
+}
+func ExampleNewStdout_customTimeFormat() {
+	logger := NewStdout(
+		// blow out current time
+		WithDefaultDecoration(
+			"",
+			&Timer{
+				func() time.Time { return time.Time{}.Add(31 * 24 * time.Hour) }, // 1st february
+				"02 Jan 2006 15:04:05",
+			},
+		),
+	)
+	defer logger.Close()
+	logger.Infof("event-1 occurred")
+	logger.Infof("event #%d occurred", 2)
+	logger.Errorf("error-1 occurred")
+	logger.Errorf("error #%d occurred", 2)
+
+	// Output:
+	// [01 Feb 0001 00:00:00] INFO event-1 occurred
+	// [01 Feb 0001 00:00:00] INFO event #2 occurred
+	// [01 Feb 0001 00:00:00] ERR error-1 occurred
+	// [01 Feb 0001 00:00:00] ERR error #2 occurred
 	//
 }
 
@@ -79,7 +103,7 @@ func ExampleNewStdout_customDecoration() {
 func ExampleNewStdout_asFacade() {
 	logger := NewStdout(
 		// blow out current time
-		WithDefaultDecoration("test", func() time.Time { return time.Time{} }),
+		WithDefaultDecoration("test", &Timer{func() time.Time { return time.Time{} }, DefaultTimeFormat}),
 	)
 	defer logger.Close()
 

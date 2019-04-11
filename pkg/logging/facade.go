@@ -33,19 +33,9 @@ const (
 )
 
 type (
-	// MessageDecorator - finally decorates message before it will be written into log.
-	// It can includes time/date special formatting, level translation and so on.
-	//
-	// `level` - severity level to translate into string if you want;
-	//
-	// `message` - source message to write into log;
-	//
-	// `idleFrames` - number of runtime frames you want to skip if your decorator adds trace info.
-	MessageDecorator func(level SeverityLevel, message string, idleFrames int) string
-
 	// facade - base unexported type to expose several loggers
 	facade struct {
-		decorator MessageDecorator
+		decorator Decorator
 		printer   *log.Logger // backend is ready to concurrency
 	}
 )
