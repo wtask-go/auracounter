@@ -1,3 +1,3 @@
 # logging
 
-Simple and lightweight package for Go for easy logging with customizable loggers.
+Simple and lightweight Go package for easy logging with customizable loggers.

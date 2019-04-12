@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"io"
 	"os"
+
+	"github.com/pkg/errors"
 )
 
 // stream - base type for all streaming loggers.
@@ -81,6 +83,15 @@ func NewBuffer(buffer *bytes.Buffer, options ...streamOption) Interface {
 }
 
 // NewFile - creates logger which writes log into file.
-func NewFile(filename string, options ...streamOption) Interface {
-	return nil // TODO implement print to file
+func NewFile(filename string, options ...streamOption) (Interface, error) {
+	file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return nil, errors.Wrapf(err, "logging.NewFile failed to open %q", filename)
+	}
+	return buildStream(
+			withPrintTarget(file),
+			withCloser(file),
+			WithDefaultDecoration("", nil),
+		).apply(options...),
+		nil
 }
