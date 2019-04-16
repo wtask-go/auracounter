@@ -5,18 +5,57 @@ import (
 	"github.com/wtask-go/auracounter/internal/api"
 )
 
-// NewCounterService - create new instance of api.CounterService implementation.
-func NewCounterService(r Repository) api.CounterService {
-	if r == nil {
-		panic(errors.New("counter.NewCounterService: counter.Repository is not implemented"))
+type serviceOption func(*service)
+
+// apply - apply given options for stream.
+func (s *service) apply(options ...serviceOption) *service {
+	if s == nil {
+		return nil
 	}
-	return &service{
-		repo: r,
+	for _, o := range options {
+		if o != nil {
+			o(s)
+		}
+	}
+	return s
+}
+
+func WithDefaults(defaults *Settings) serviceOption {
+	if defaults == nil {
+		panic(errors.New("counter.WithDefaults: unable to use nil settings"))
+	}
+	if err := defaults.verify(); err != nil {
+		panic(err)
+	}
+	return func(s *service) {
+		s.defaults = defaults
 	}
 }
 
+// NewCounterService - create new instance of api.CounterService implementation.
+func NewCounterService(counterID int, r Repository, options ...serviceOption) api.CounterService {
+	// will reserve zero ID
+	if counterID < 0 {
+		panic(errors.Errorf("counter.NewCounterService: invalid counter ID (%d)", counterID))
+	}
+	if r == nil {
+		panic(errors.New("counter.NewCounterService: unable to use nil Repository"))
+	}
+	s := (&service{
+		repo:      r,
+		counterID: counterID,
+		defaults:  DefaultSettings(),
+	}).apply(options...)
+	if err := s.repo.EnsureSettings(s.counterID, s.defaults);err!=nil {
+		panic(errors.Errorf("counter.NewCounterService: unable to use nil Repository"))
+	}
+	return s
+}
+
 type service struct {
-	repo Repository
+	repo      Repository
+	counterID int
+	defaults  *Settings
 }
 
 func (s *service) GetNumber() (*api.GetNumberResult, error) {

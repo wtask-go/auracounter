@@ -3,6 +3,7 @@ package mysql
 import (
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"github.com/wtask-go/auracounter/internal/api"
 	"github.com/wtask-go/auracounter/internal/counter/datastore/mysql/model"
 )
 
@@ -32,7 +33,7 @@ func (s *storage) IncrementNumber() (int, error) {
 		s.cid,
 		1, // not 0 !!! if insert, hence previous counter value was 0, but new is 1 for default
 		1,
-		int(^uint32(0)>>1), // max int32
+		api.MaxInt,
 	).Error
 	if err != nil {
 		tx.Rollback()

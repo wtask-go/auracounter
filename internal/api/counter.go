@@ -1,16 +1,16 @@
 package api
 
-type CounterService interface {
-	GetNumber() (*GetNumberResult, error)
-	IncrementNumber() (*IncrementNumberResult, error)
-	SetSettings(delta, max int) (*SetSettingsResult, error)
+type IncrementalCounterService interface {
+	GetCounterValue() (*GetCounterValue, error)
+	IncreaseCounter() (*IncreaseCounterResult, error)
+	SetCounterSettings(increment, upperLimit int) (*SetSettingsResult, error)
 }
 
-type GetNumberResult struct {
+type GetCounterValue struct {
 	Value int `json:"value"`
 }
 
-type IncrementNumberResult struct {
+type IncreaseCounterResult struct {
 	Value int `json:"value"`
 }
 
