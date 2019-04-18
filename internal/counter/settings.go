@@ -1,9 +1,9 @@
 package counter
 
 import (
+	"errors"
+	"fmt"
 	"math"
-
-	"github.com/pkg/errors"
 )
 
 type Settings struct {
@@ -17,22 +17,26 @@ func (s *Settings) verify() error {
 		return errors.New("counter.Settings: unable to verify nil settings")
 	}
 	if s.Increment < 0 {
-		return errors.Errorf("counter.Settings: negative increment (%d)", s.Increment)
+		return fmt.Errorf("counter.Settings: negative increment (%d)", s.Increment)
 	}
-	if s.Lower >= s.Upper {
-		return errors.Errorf("counter.Settings: lower limit (%d) is above upper (%d)", s.Lower, s.Upper)
+	// Hmm... Zero increment will pause the counter
+	// if s.Increment == 0 {
+	// 	return errors.New("counter.Settings: useless zero increment")
+	// }
+	if s.Lower > s.Upper {
+		return fmt.Errorf("counter.Settings: invalid counter range [%d:%d]", s.Lower, s.Upper)
 	}
 	if s.StartFrom < s.Lower || s.StartFrom > s.Upper {
-		return errors.Errorf(
-			"counter.Settings: start value (%d) is out of the range (%d, %d)",
+		return fmt.Errorf(
+			"counter.Settings: start value (%d) is out of the range [%d:%d]",
 			s.StartFrom,
 			s.Lower,
 			s.Upper,
 		)
 	}
 	if float64(s.Increment) > math.Abs(float64(s.Upper-s.Lower)) {
-		return errors.Errorf(
-			"counter.Settings: increment (%d) is wider than counter range (%d, %d)",
+		return fmt.Errorf(
+			"counter.Settings: increment (%d) is wider than counter range [%d:%d]",
 			s.Increment,
 			s.Lower,
 			s.Upper,

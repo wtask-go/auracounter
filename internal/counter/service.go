@@ -5,90 +5,112 @@ import (
 	"github.com/wtask-go/auracounter/internal/api"
 )
 
-type serviceOption func(*service)
+type (
+	// service - struct to implement api.CyclicCounterService interface
+	service struct {
+		repo      Repository
+		counterID int
+		defaults  *Settings
+	}
 
-// apply - apply given options for stream.
-func (s *service) apply(options ...serviceOption) *service {
+	// serviceOption - func to set unexported optional field of service struct
+	serviceOption func(*service) error
+)
+
+// invalidOption - helper to return error from option builder
+func invalidOption(e error) serviceOption {
+	return func(*service) error {
+		return e
+	}
+}
+
+// setup - applies options, but stops after first error
+func (s *service) setup(options ...serviceOption) error {
 	if s == nil {
 		return nil
 	}
-	for _, o := range options {
-		if o != nil {
-			o(s)
+	for _, setter := range options {
+		if setter == nil {
+			continue
+		}
+		if err := setter(s); err != nil {
+			return err
 		}
 	}
-	return s
+	return nil
 }
 
-func WithDefaults(defaults *Settings) serviceOption {
-	if defaults == nil {
-		panic(errors.New("counter.WithDefaults: unable to use nil settings"))
+// WithDefaults - sets default service settings.
+// Service will use given settings if there are not persisted before.
+func WithDefaults(settings *Settings) serviceOption {
+	if settings == nil {
+		return invalidOption(errors.New("counter.WithDefaults: unable to use nil settings"))
 	}
-	if err := defaults.verify(); err != nil {
-		panic(err)
+	if err := settings.verify(); err != nil {
+		return invalidOption(errors.WithMessage(err, "counter.WithDefaults: invalid settings"))
 	}
-	return func(s *service) {
-		s.defaults = defaults
+	return func(s *service) error {
+		s.defaults = settings
+		return nil
 	}
 }
 
-// NewCounterService - create new instance of api.CounterService implementation.
-func NewCounterService(counterID int, r Repository, options ...serviceOption) api.CounterService {
-	// will reserve zero ID
-	if counterID < 0 {
-		panic(errors.Errorf("counter.NewCounterService: invalid counter ID (%d)", counterID))
+// NewCyclicCounterService - create new instance of api.CyclicCounterService implementation.
+func NewCyclicCounterService(counterID int, r Repository, options ...serviceOption) (api.CyclicCounterService, error) {
+	// required params
+	if counterID <= 0 {
+		return nil, errors.Errorf("counter.NewCyclicCounterService: invalid counter ID (%d)", counterID)
 	}
 	if r == nil {
-		panic(errors.New("counter.NewCounterService: unable to use nil Repository"))
+		return nil, errors.New("counter.NewCyclicCounterService: unable to use nil as Repository")
 	}
-	s := (&service{
+	s := &service{
 		repo:      r,
 		counterID: counterID,
 		defaults:  DefaultSettings(),
-	}).apply(options...)
-	if err := s.repo.EnsureSettings(s.counterID, s.defaults);err!=nil {
-		panic(errors.Errorf("counter.NewCounterService: unable to use nil Repository"))
 	}
-	return s
+	// options
+	if err := s.setup(options...); err != nil {
+		return nil, errors.WithMessage(err, "counter.NewCyclicCounterService: setup error")
+	}
+	if err := s.repo.EnsureSettings(s.counterID, s.defaults); err != nil {
+		return nil,
+			errors.WithMessage(err, "counter.NewCyclicCounterService: unable to ensure persisted counter settings")
+	}
+	return s, nil
 }
 
-type service struct {
-	repo      Repository
-	counterID int
-	defaults  *Settings
-}
-
-func (s *service) GetNumber() (*api.GetNumberResult, error) {
-	num, err := s.repo.GetNumber()
+func (s *service) GetCounterValue() (*api.IntValueResult, *api.Error) {
+	value, err := s.repo.Get(s.counterID)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get number from repository")
+		// TODO log internal error
+		return nil, &api.Error{Message: "failed to get counter value", Internal: err}
 	}
-	return &api.GetNumberResult{Value: num}, nil
+	return &api.IntValueResult{Value: value}, nil
 }
 
-func (s *service) IncrementNumber() (*api.IncrementNumberResult, error) {
-	num, err := s.repo.IncrementNumber()
+func (s *service) IncreaseCounter() (*api.IntValueResult, *api.Error) {
+	value, err := s.repo.Increase(s.counterID)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to increment number due to repository")
+		// TODO log internal error
+		return nil, &api.Error{Message: "failed to increase counter", Internal: err}
 	}
-	return &api.IncrementNumberResult{Value: num}, nil
+	return &api.IntValueResult{Value: value}, nil
 }
 
-func (s *service) SetSettings(delta, max int) (*api.SetSettingsResult, error) {
-	if delta <= 0 {
-		return nil, &api.ErrorInvalidArgument{"invalid counter delta"}
+func (s *service) SetCounterSettings(increment, lower, upper int) (*api.OKResult, *api.Error) {
+	err := (&Settings{
+		StartFrom: lower, // we disallow to set start in this version
+		Increment: increment,
+		Lower:     lower, // for API v1 expected 0 always
+		Upper:     upper,
+	}).verify()
+	if err != nil {
+		return nil, &api.Error{Message: err.Error()}
 	}
-
-	if max <= 0 {
-		return nil, &api.ErrorInvalidArgument{"invalid max value for counter"}
+	if err := s.repo.SetSettings(increment, lower, upper); err != nil {
+		//"failed set new settings due to repository"
+		return nil, &api.Error{Message: "failed to set new settings", Internal: err}
 	}
-
-	if max < delta {
-		return nil, &api.ErrorInvalidArgument{"mutually exclusive arguments"}
-	}
-
-	if err := s.repo.SetSettings(delta, max); err != nil {
-		return nil, errors.Wrap(err, "failed set new settings due to repository")
-	}
-	return &api.SetSettingsResult{OK: true}, nil
+	return &api.OKResult{OK: true}, nil
 }

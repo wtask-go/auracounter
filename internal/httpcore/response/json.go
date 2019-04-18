@@ -10,6 +10,7 @@ import (
 func HandleJSON(status int, data interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		// TODO Check encoding error
 		w.WriteHeader(status)
 		json.NewEncoder(w).Encode(&data)
 	}
