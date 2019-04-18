@@ -6,12 +6,19 @@ import (
 	"math"
 )
 
+// Settings - common settings of counter.
 type Settings struct {
-	StartFrom    int
-	Increment    int
-	Lower, Upper int
+	// StartFrom - default first counter value
+	StartFrom int
+	// Increment - counter increment, can only to be an positive int
+	Increment int
+	// Lower - lower boundary of counter range
+	Lower int
+	// Upper - upper boundary of counter range
+	Upper int
 }
 
+// verify - validates settings at once
 func (s *Settings) verify() error {
 	if s == nil {
 		return errors.New("counter.Settings: unable to verify nil settings")
@@ -45,6 +52,7 @@ func (s *Settings) verify() error {
 	return nil
 }
 
+// DefaultSettings - return default (initial) counter settings.
 func DefaultSettings() *Settings {
 	return &Settings{
 		StartFrom: 0,

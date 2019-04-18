@@ -109,7 +109,6 @@ func (s *service) SetCounterSettings(increment, lower, upper int) (*api.OKResult
 		return nil, &api.Error{Message: err.Error()}
 	}
 	if err := s.repo.SetSettings(increment, lower, upper); err != nil {
-		//"failed set new settings due to repository"
 		return nil, &api.Error{Message: "failed to set new settings", Internal: err}
 	}
 	return &api.OKResult{OK: true}, nil

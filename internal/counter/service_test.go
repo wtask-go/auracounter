@@ -235,13 +235,15 @@ func TestSetSettings(t *testing.T) {
 		mustSuccessful     bool // if true faulty must fail
 	}{
 		{
+			// useless or sleepping counter
 			"SetCounterSettings(0, 0, 0)",
 			func(s api.CyclicCounterService) (*api.OKResult, *api.Error) {
-				return s.SetCounterSettings(0, 0, 0) // useless or sleepping counter
+				return s.SetCounterSettings(0, 0, 0)
 			},
 			true,
 		},
 		{
+			// negative increment
 			"SetCounterSettings(-1, 0, 1)",
 			func(s api.CyclicCounterService) (*api.OKResult, *api.Error) {
 				return s.SetCounterSettings(-1, 0, 1)
@@ -263,6 +265,7 @@ func TestSetSettings(t *testing.T) {
 			true,
 		},
 		{
+			// increment is wider than range
 			"SetCounterSettings(2, 0, 1)",
 			func(s api.CyclicCounterService) (*api.OKResult, *api.Error) {
 				return s.SetCounterSettings(2, 0, 1)
@@ -270,6 +273,7 @@ func TestSetSettings(t *testing.T) {
 			false,
 		},
 		{
+			// invalid lower-upper range [2:0]
 			"SetCounterSettings(2, 2, 0)",
 			func(s api.CyclicCounterService) (*api.OKResult, *api.Error) {
 				return s.SetCounterSettings(2, 2, 0)
@@ -297,14 +301,14 @@ func TestSetSettings(t *testing.T) {
 				t.Errorf("%s: unexpected nil result for non-failed service", c.signature)
 			}
 			if err != nil {
-				t.Errorf("%s: unexpected non-nil error for non-failed service: %+v", c.signature, err)
+				t.Errorf("%s: unexpected non-nil API error for non-failed service: %+v", c.signature, err)
 			}
 		} else {
 			if okResult != nil {
 				t.Errorf("%s: expected nil result for non-failed service, got: %+v ", c.signature, okResult)
 			}
 			if err == nil {
-				t.Errorf("%s: unexpected nil error for non-failed service", c.signature)
+				t.Errorf("%s: unexpected nil API error for non-failed service", c.signature)
 			}
 		}
 		// faulty service must fail in both cases:
@@ -314,7 +318,7 @@ func TestSetSettings(t *testing.T) {
 			t.Errorf("%s: unexpected non-nil result for faulty service: %+v", c.signature, faultyResult)
 		}
 		if faultyErr == nil {
-			t.Errorf("%s: unexpected nil error for faulty service", c.signature)
+			t.Errorf("%s: unexpected nil API error for faulty service", c.signature)
 		}
 	}
 }
