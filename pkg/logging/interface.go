@@ -1,6 +1,6 @@
 package logging
 
-// Facade is common representation the minimal set of methods for logging.
+// Facade is common representation of the set of methods for logging.
 type Facade interface {
 	// Error - joins arguments with space, append line feed if is missing and log error message.
 	Error(a ...interface{})
