@@ -22,7 +22,7 @@ type storage struct {
 	cid    int
 }
 
-func NewStorage(options ...storageOption) (counter.Storage, error) {
+func NewStorage(options ...storageOption) (counter.Storage, error) { 
 	s := (&storage{}).apply(options...)
 	if s.dsn == "" {
 		return nil, errors.New("mysql.NewStorage: required DSN is missed")

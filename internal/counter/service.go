@@ -99,16 +99,16 @@ func (s *service) IncreaseCounter() (*api.IntValueResult, *api.Error) {
 }
 
 func (s *service) SetCounterSettings(increment, lower, upper int) (*api.OKResult, *api.Error) {
-	err := (&Settings{
+	settings := &Settings{
 		StartFrom: lower, // we disallow to set start in this version
 		Increment: increment,
 		Lower:     lower, // for API v1 expected 0 always
 		Upper:     upper,
-	}).verify()
-	if err != nil {
+	} 
+	if err:= settings.verify(); err != nil {
 		return nil, &api.Error{Message: err.Error()}
 	}
-	if err := s.repo.SetSettings(increment, lower, upper); err != nil {
+	if err := s.repo.SetSettings(s.counterID, settings); err != nil {
 		return nil, &api.Error{Message: "failed to set new settings", Internal: err}
 	}
 	return &api.OKResult{OK: true}, nil

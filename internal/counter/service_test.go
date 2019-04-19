@@ -14,28 +14,28 @@ type repository struct {
 	failSetSettings    bool
 }
 
-func (r *repository) EnsureSettings(counterID int, defaults *Settings) error {
+func (r *repository) EnsureSettings(_ int, _ *Settings) error {
 	if r.failEnsureSettings {
 		return errors.New("repository.EnsureSettings() failed")
 	}
 	return nil
 }
 
-func (r *repository) Get(counterID int) (int, error) {
+func (r *repository) Get(_ int) (int, error) {
 	if r.failGet {
 		return 0, errors.New("repository.Get() failed")
 	}
 	return 0, nil
 }
 
-func (r *repository) Increase(counterID int) (int, error) {
+func (r *repository) Increase(_ int) (int, error) {
 	if r.failIncrease {
 		return 0, errors.New("repository.Increase() failed")
 	}
 	return 0, nil
 }
 
-func (r *repository) SetSettings(counterID, increment, upperLimit int) error {
+func (r *repository) SetSettings(_ int, _ *Settings) error {
 	if r.failSetSettings {
 		return errors.New("repository.SetSettings() failed")
 	}
