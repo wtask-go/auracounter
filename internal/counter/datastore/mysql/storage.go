@@ -15,15 +15,54 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-type storage struct {
-	db     *gorm.DB
-	dsn    string
-	prefix string
-	cid    int
+type (
+	storage struct {
+		db       *gorm.DB
+		dsn      string
+		prefix   string
+		defaults *counter.Settings
+	}
+
+	storageOption func() (func(*storage), error)
+)
+
+// failedOption - helper to expose error from option builder
+func failedOption(err error) storageOption {
+	return func() (func(*storage), error) {
+		return nil, err
+	}
 }
 
-func NewStorage(options ...storageOption) (counter.Storage, error) { 
-	s := (&storage{}).apply(options...)
+// properOption - helper to expose setter from option builder
+func properOption(setter func(*storage)) storageOption {
+	return func() (func(*storage), error) {
+		return setter, nil
+	}
+}
+
+func (s *storage) setup(options ...storageOption) error {
+	if s == nil {
+		return nil
+	}
+	for _, option := range options {
+		if option == nil {
+			continue
+		}
+		setter, err := option()
+		if err != nil {
+			return err
+		}
+		if setter != nil {
+			setter(s)
+		}
+	}
+	return nil
+}
+
+func NewStorage(options ...storageOption) (counter.Storage, error) {
+	s := (&storage{
+		defaults: counter.DefaultSettings(),
+	}).apply(options...)
 	if s.dsn == "" {
 		return nil, errors.New("mysql.NewStorage: required DSN is missed")
 	}
@@ -56,36 +95,29 @@ func NewStorage(options ...storageOption) (counter.Storage, error) {
 	return s, nil
 }
 
-type storageOption func(*storage)
-
 func WithDSN(dsn string) storageOption {
-	return func(s *storage) {
-		s.dsn = strings.TrimPrefix(dsn, "mysql://")
+	dsn = strings.TrimPrefix(dsn, "mysql://")
+	if dsn == "" {
+		return failedOption(errors.Errorf("invalid data source name %q", dsn))
 	}
+	return properOption(func(s *storage) {
+		s.dsn = dsn
+	})
 }
 
 func WithTablePrefix(prefix string) storageOption {
-	return func(s *storage) {
+	return properOption(func(s *storage) {
 		s.prefix = prefix
-	}
+	})
 }
 
-func WithCounterID(cid int) storageOption {
-	return func(s *storage) {
-		s.cid = cid
+func WithCounterSettings(defaults *counter.Settings) storageOption {
+	if defaults == nil {
+		return failedOption(errors.New("unable to use nil as default counter settings"))
 	}
-}
-
-func (s *storage) apply(options ...storageOption) *storage {
-	if s == nil {
-		return nil
-	}
-	for _, o := range options {
-		if o != nil {
-			o(s)
-		}
-	}
-	return s
+	return properOption(func(s *storage) {
+		s.defaults = defaults
+	})
 }
 
 func (s *storage) Close() error {

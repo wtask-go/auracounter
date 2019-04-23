@@ -3,6 +3,7 @@ package logging
 import (
 	"fmt"
 	"math/rand"
+	"path/filepath"
 )
 
 // MakeLog - generates log using Facade implementation, not Interface.
@@ -58,5 +59,5 @@ func RandomTestdataName(suffix string) string {
 		}
 		return string(s)
 	}
-	return "testdata/" + random(10) + random(10) + suffix
+	return filepath.Join("testdata", random(10)+random(10)+suffix)
 }

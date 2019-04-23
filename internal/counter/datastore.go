@@ -6,7 +6,7 @@ type Repository interface {
 	// If not, method will save default settings for counter.
 	EnsureSettings(counterID int, defaults *Settings) error
 	// Get - return current counter value.
-	Get(counterID int) (int, error)
+	GetValue(counterID int) (int, error)
 	// Increase - increase counter with increment which defined by settings.
 	Increase(counterID int) (int, error)
 	// SetSettings - set new counter settings

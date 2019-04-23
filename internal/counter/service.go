@@ -13,28 +13,38 @@ type (
 		defaults  *Settings
 	}
 
-	// serviceOption - func to set unexported optional field of service struct
-	serviceOption func(*service) error
+	serviceOption func() (func(*service), error)
 )
 
-// invalidOption - helper to return error from option builder
-func invalidOption(e error) serviceOption {
-	return func(*service) error {
-		return e
+// failedOption - helper to expose error from option builder
+func failedOption(err error) serviceOption {
+	return func() (func(*service), error) {
+		return nil, err
 	}
 }
 
-// setup - applies options, but stops after first error
+// properOption - helper to expose setter from option builder
+func properOption(setter func(*service)) serviceOption {
+	return func() (func(*service), error) {
+		return setter, nil
+	}
+}
+
+// setup - applies options, but stops on first error
 func (s *service) setup(options ...serviceOption) error {
 	if s == nil {
 		return nil
 	}
-	for _, setter := range options {
-		if setter == nil {
+	for _, option := range options {
+		if option == nil {
 			continue
 		}
-		if err := setter(s); err != nil {
+		setter, err := option()
+		if err != nil {
 			return err
+		}
+		if setter != nil {
+			setter(s)
 		}
 	}
 	return nil
@@ -44,15 +54,14 @@ func (s *service) setup(options ...serviceOption) error {
 // Service will use given settings if there are not persisted before.
 func WithDefaults(settings *Settings) serviceOption {
 	if settings == nil {
-		return invalidOption(errors.New("counter.WithDefaults: unable to use nil settings"))
+		return failedOption(errors.New("counter.WithDefaults: unable to use nil settings"))
 	}
 	if err := settings.verify(); err != nil {
-		return invalidOption(errors.WithMessage(err, "counter.WithDefaults: invalid settings"))
+		return failedOption(errors.WithMessage(err, "counter.WithDefaults: invalid settings"))
 	}
-	return func(s *service) error {
+	return properOption(func(s *service) {
 		s.defaults = settings
-		return nil
-	}
+	})
 }
 
 // NewCyclicCounterService - create new instance of api.CyclicCounterService implementation.
@@ -81,7 +90,7 @@ func NewCyclicCounterService(counterID int, r Repository, options ...serviceOpti
 }
 
 func (s *service) GetCounterValue() (*api.IntValueResult, *api.Error) {
-	value, err := s.repo.Get(s.counterID)
+	value, err := s.repo.GetValue(s.counterID)
 	if err != nil {
 		// TODO log internal error
 		return nil, &api.Error{Message: "failed to get counter value", Internal: err}
@@ -104,8 +113,8 @@ func (s *service) SetCounterSettings(increment, lower, upper int) (*api.OKResult
 		Increment: increment,
 		Lower:     lower, // for API v1 expected 0 always
 		Upper:     upper,
-	} 
-	if err:= settings.verify(); err != nil {
+	}
+	if err := settings.verify(); err != nil {
 		return nil, &api.Error{Message: err.Error()}
 	}
 	if err := s.repo.SetSettings(s.counterID, settings); err != nil {
