@@ -17,10 +17,9 @@ import (
 
 type (
 	storage struct {
-		db       *gorm.DB
-		dsn      string
-		prefix   string
-		defaults *counter.Settings
+		db     *gorm.DB
+		dsn    string
+		prefix string
 	}
 
 	storageOption func() (func(*storage), error)
@@ -40,6 +39,7 @@ func properOption(setter func(*storage)) storageOption {
 	}
 }
 
+// setup - set storage options
 func (s *storage) setup(options ...storageOption) error {
 	if s == nil {
 		return nil
@@ -59,15 +59,28 @@ func (s *storage) setup(options ...storageOption) error {
 	return nil
 }
 
-func NewStorage(options ...storageOption) (counter.Storage, error) {
+// WithTablePrefix - common custom prefix for underlying database table(s).
+// By default, storage does not use prefix for  table names.
+func WithTablePrefix(prefix string) storageOption {
+	return properOption(func(s *storage) {
+		s.prefix = prefix
+	})
+}
+
+// NewStorage - implements counter.Storage interface to store cyclic incremental counter with mysql.
+// If storage was created without errors, you may use it after has ensured it has latest version
+// and is up-to-date, see `EnsureLatest()` method.
+func NewStorage(dsn string, options ...storageOption) (counter.Storage, error) {
 	s := (&storage{
-		defaults: counter.DefaultSettings(),
-	}).apply(options...)
+		dsn: strings.TrimPrefix(dsn, "mysql://"),
+	})
+
 	if s.dsn == "" {
 		return nil, errors.New("mysql.NewStorage: required DSN is missed")
 	}
-	if s.cid < 1 {
-		return nil, errors.Errorf("mysql.NewStorage: invalid counter ID (%d)", s.cid)
+
+	if err := s.setup(options...); err != nil {
+		return nil, errors.Wrap(err, "mysql.NewStorage: option error")
 	}
 
 	if s.prefix != "" {
@@ -82,44 +95,22 @@ func NewStorage(options ...storageOption) (counter.Storage, error) {
 	}
 	s.db = db
 
-	s.db.
-		LogMode(false).
+	s.db.LogMode(false).
 		SingularTable(true)
-	err = s.db.
-		Set("gorm:table_options", "COLLATE='utf8_general_ci' ENGINE=InnoDB").
-		AutoMigrate(&model.Counter{}).
-		Error
-	if err != nil {
-		return nil, errors.Wrap(err, "mysql.NewStorage: failed to prepare counter storage")
-	}
+
 	return s, nil
 }
 
-func WithDSN(dsn string) storageOption {
-	dsn = strings.TrimPrefix(dsn, "mysql://")
-	if dsn == "" {
-		return failedOption(errors.Errorf("invalid data source name %q", dsn))
-	}
-	return properOption(func(s *storage) {
-		s.dsn = dsn
-	})
+// EnsureLatest - make sure underlying database has latest version and is up-to-date to store counter.
+func (s *storage) EnsureLatest() error {
+	err := s.db.
+		Set("gorm:table_options", "COLLATE='utf8_general_ci' ENGINE=InnoDB").
+		AutoMigrate(&model.Counter{}).
+		Error
+	return errors.Wrap(err, "mysql.EnsureLatest: failed")
 }
 
-func WithTablePrefix(prefix string) storageOption {
-	return properOption(func(s *storage) {
-		s.prefix = prefix
-	})
-}
-
-func WithCounterSettings(defaults *counter.Settings) storageOption {
-	if defaults == nil {
-		return failedOption(errors.New("unable to use nil as default counter settings"))
-	}
-	return properOption(func(s *storage) {
-		s.defaults = defaults
-	})
-}
-
+// Close -
 func (s *storage) Close() error {
 	if s == nil || s.db == nil {
 		return nil

@@ -13,6 +13,7 @@ type (
 		defaults  *Settings
 	}
 
+	// serviceOption - high-level func to make service option setter or error
 	serviceOption func() (func(*service), error)
 )
 
@@ -50,7 +51,7 @@ func (s *service) setup(options ...serviceOption) error {
 	return nil
 }
 
-// WithDefaults - sets default service settings.
+// WithDefaults - sets default settings for maintain cyclic incremental counter.
 // Service will use given settings if there are not persisted before.
 func WithDefaults(settings *Settings) serviceOption {
 	if settings == nil {
@@ -64,7 +65,7 @@ func WithDefaults(settings *Settings) serviceOption {
 	})
 }
 
-// NewCyclicCounterService - create new instance of api.CyclicCounterService implementation.
+// NewCyclicCounterService - builds new instance of api.CyclicCounterService implementation.
 func NewCyclicCounterService(counterID int, r Repository, options ...serviceOption) (api.CyclicCounterService, error) {
 	// required params
 	if counterID <= 0 {
@@ -89,6 +90,7 @@ func NewCyclicCounterService(counterID int, r Repository, options ...serviceOpti
 	return s, nil
 }
 
+// GetCounterValue - return current value of maintained counter.
 func (s *service) GetCounterValue() (*api.IntValueResult, *api.Error) {
 	value, err := s.repo.GetValue(s.counterID)
 	if err != nil {
@@ -98,6 +100,7 @@ func (s *service) GetCounterValue() (*api.IntValueResult, *api.Error) {
 	return &api.IntValueResult{Value: value}, nil
 }
 
+// IncreaseCounter - increase value of maintained counter.
 func (s *service) IncreaseCounter() (*api.IntValueResult, *api.Error) {
 	value, err := s.repo.Increase(s.counterID)
 	if err != nil {
@@ -107,6 +110,7 @@ func (s *service) IncreaseCounter() (*api.IntValueResult, *api.Error) {
 	return &api.IntValueResult{Value: value}, nil
 }
 
+// SetCounterSettings - set new settings for maintained counter.
 func (s *service) SetCounterSettings(increment, lower, upper int) (*api.OKResult, *api.Error) {
 	settings := &Settings{
 		StartFrom: lower, // we disallow to set start in this version

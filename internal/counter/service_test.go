@@ -21,7 +21,7 @@ func (r *repository) EnsureSettings(_ int, _ *Settings) error {
 	return nil
 }
 
-func (r *repository) Get(_ int) (int, error) {
+func (r *repository) GetValue(_ int) (int, error) {
 	if r.failGet {
 		return 0, errors.New("repository.Get() failed")
 	}
@@ -170,7 +170,7 @@ func TestServiceBuilder(t *testing.T) {
 	}
 }
 
-func TestGetCounterValue(t *testing.T) {
+func TestService_GetValue(t *testing.T) {
 	service, err := NewCyclicCounterService(1, &repository{}) // good working repo
 	if err != nil {
 		// duplicates cases in TestServiceBuilder
@@ -199,7 +199,7 @@ func TestGetCounterValue(t *testing.T) {
 	}
 }
 
-func TestIncreaseCounter(t *testing.T) {
+func TestService_Increase(t *testing.T) {
 	service, err := NewCyclicCounterService(1, &repository{}) // good working repo
 	if err != nil {
 		// duplicates cases in TestServiceBuilder
@@ -228,7 +228,7 @@ func TestIncreaseCounter(t *testing.T) {
 	}
 }
 
-func TestSetSettings(t *testing.T) {
+func TestService_SetSettings(t *testing.T) {
 	cases := []struct {
 		signature          string
 		setCounterSettings func(s api.CyclicCounterService) (*api.OKResult, *api.Error)

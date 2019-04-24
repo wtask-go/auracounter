@@ -15,8 +15,8 @@ type Repository interface {
 
 // Storage - counter datastorage
 type Storage interface {
-	// EnsureLatestVersion - make sure underlying database is up-to-date to store counter.
-	EnsureLatestVersion() error
+	// Mount - make sure underlying database has latest version and is up-to-date to store counter.
+	EnsureLatest() error
 	// Repository - allows to explicitly expose the storage as a repository.
 	Repository() Repository
 	// Close - must close and free all used connections and resources.
