@@ -110,7 +110,7 @@ func (s *storage) EnsureLatest() error {
 	return errors.Wrap(err, "mysql.EnsureLatest: failed")
 }
 
-// Close -
+// Close - close and free all used connections and resources.
 func (s *storage) Close() error {
 	if s == nil || s.db == nil {
 		return nil
