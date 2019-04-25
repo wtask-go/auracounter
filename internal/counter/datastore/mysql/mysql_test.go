@@ -54,8 +54,8 @@ func TestMySQLDatastore(t *testing.T) {
 		t.Errorf("Unable to create mysql storage: %v", err)
 	}
 	suite := []test{
-		testStorage_EnsureLatest(checker, storage),
-		testRepository_EnsureSettings(checker, storage),
+		StorageEnsureLatest(checker, storage),
+		RepositoryEnsureSettings(checker, storage),
 	}
 	for _, test := range suite {
 		clearDB(checker)
@@ -63,7 +63,7 @@ func TestMySQLDatastore(t *testing.T) {
 	}
 }
 
-func testStorage_EnsureLatest(checker *gorm.DB, storage counter.Storage) test {
+func StorageEnsureLatest(checker *gorm.DB, storage counter.Storage) test {
 	return func(t *testing.T) {
 		t.Log("Storage.EnsureLatest()")
 		if checker.HasTable(&model.Counter{}) {
@@ -79,7 +79,7 @@ func testStorage_EnsureLatest(checker *gorm.DB, storage counter.Storage) test {
 	}
 }
 
-func testRepository_EnsureSettings(checker *gorm.DB, storage counter.Storage) test {
+func RepositoryEnsureSettings(checker *gorm.DB, storage counter.Storage) test {
 	return func(t *testing.T) {
 		t.Log("Repository.EnsureSettings()")
 		// empty database
