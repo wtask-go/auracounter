@@ -93,10 +93,6 @@ func StorageEnsureLatest(checker *gorm.DB, storage counter.Storage) test {
 func RepositoryEnsureSettings(checker *gorm.DB, repository counter.Repository) test {
 	return func(t *testing.T) {
 		t.Log("TEST: Repository.(mysql).EnsureSettings()")
-		// empty database
-		// if err := storage.EnsureLatest(); err != nil {
-		// 	t.Errorf("Unable to ensure the database has latest version: %v", err)
-		// }
 
 		checker.Delete(&model.Counter{}) // should delete all records
 		settings := counter.DefaultSettings()
