@@ -14,7 +14,7 @@ import (
 )
 
 // NewCounterHandler - builds main http handler for api.CounterService implementation
-func NewCounterHandler(baseURI string, service api.CounterService) http.Handler {
+func NewCounterHandler(baseURI string, service api.CyclicCounterService) http.Handler {
 	if service == nil {
 		panic(errors.New("rest.NewHandler: CounterService is not implemented"))
 	}
@@ -28,12 +28,12 @@ func NewCounterHandler(baseURI string, service api.CounterService) http.Handler 
 		v1.NewRoute().
 			Path("/getnumber/").
 			Methods("GET").
-			HandlerFunc(handleGetNumber(service))
+			HandlerFunc(handleGetCounterValue(service))
 
 		v1.NewRoute().
 			Path("/incrementnumber/").
 			Methods("POST").
-			HandlerFunc(handleIncrementNumber(service))
+			HandlerFunc(handleIncreaseCounter(service))
 
 		v1.NewRoute().
 			Path("/setsettings/{delta:[0-9]+}/{max:[0-9]+}/").
@@ -43,19 +43,24 @@ func NewCounterHandler(baseURI string, service api.CounterService) http.Handler 
 
 	return r
 }
+
 func httpStatusFactory(err error) int {
-	if err == nil {
+	switch e := err.(type) {
+	case nil:
 		return http.StatusOK
+	case *api.Error:
+		if !e.IsInternal() {
+			return http.StatusBadRequest
+		}
+		return http.StatusInternalServerError
+	default:
+		return http.StatusServiceUnavailable
 	}
-	if api.IsRequestError(err) {
-		return http.StatusBadRequest
-	}
-	return http.StatusInternalServerError
 }
 
-func handleGetNumber(service api.CounterService) http.HandlerFunc {
+func handleGetCounterValue(service api.CyclicCounterService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		result, err := service.GetNumber()
+		result, err := service.GetCounterValue()
 		status := httpStatusFactory(err)
 		if err != nil {
 			response.HandleJSON(status, &response.Fail{response.ErrorDescription{0, fmt.Sprint(err)}})(w, r)
@@ -65,9 +70,9 @@ func handleGetNumber(service api.CounterService) http.HandlerFunc {
 	}
 }
 
-func handleIncrementNumber(service api.CounterService) http.HandlerFunc {
+func handleIncreaseCounter(service api.CyclicCounterService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		result, err := service.IncrementNumber()
+		result, err := service.IncreaseCounter()
 		status := httpStatusFactory(err)
 		if err != nil {
 			response.HandleJSON(status, &response.Fail{response.ErrorDescription{0, fmt.Sprint(err)}})(w, r)
@@ -77,7 +82,7 @@ func handleIncrementNumber(service api.CounterService) http.HandlerFunc {
 	}
 }
 
-func handleSetSettings(service api.CounterService) http.HandlerFunc {
+func handleSetSettings(service api.CyclicCounterService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		delta, err := strconv.Atoi(mux.Vars(r)["delta"])
 		if err != nil {
@@ -95,7 +100,8 @@ func handleSetSettings(service api.CounterService) http.HandlerFunc {
 			)(w, r)
 			return
 		}
-		result, err := service.SetSettings(delta, max)
+		// TODO Change URI to allow 3 parameters
+		result, err := service.SetCounterSettings(delta, 0, max)
 		status := httpStatusFactory(err)
 		if err != nil {
 			response.HandleJSON(
