@@ -85,7 +85,7 @@ func NewCyclicCounterService(counterID int, r Repository, options ...serviceOpti
 	}
 	if err := s.repo.EnsureSettings(s.counterID, s.defaults); err != nil {
 		return nil,
-			errors.WithMessage(err, "counter.NewCyclicCounterService: unable to ensure persisted counter settings")
+			errors.WithMessage(err, "counter.NewCyclicCounterService: unable to ensure counter settings")
 	}
 	return s, nil
 }
