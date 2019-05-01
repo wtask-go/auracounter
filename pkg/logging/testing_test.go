@@ -9,12 +9,12 @@ import (
 // MakeLog - generates log using Facade implementation, not Interface.
 // This func available for all tests.
 func MakeLog(f Facade) {
-	f.Info("new event", " ", struct{ Foo string }{"Bar"})
+	f.Info("new event", struct{ Foo string }{"Bar"})
 	f.Info() // is ignored
 	f.Infof("event-1 occurred")
 	f.Infof("event #%d occurred", 2)
 	f.Error() // is ignored
-	f.Error("new event", " ", struct{ Foo string }{"Bar"})
+	f.Error("new event", struct{ Foo string }{"Bar"})
 	f.Errorf("error-1 occurred")
 	f.Errorf("error #%d occurred", 2)
 }

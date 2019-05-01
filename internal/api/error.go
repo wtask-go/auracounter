@@ -14,32 +14,33 @@ type Error struct {
 	Internal error // if nil it is not an internal error
 }
 
-// Error - go Error interface implementation.
+// Error - returns error message without references to internal details if any.
 func (e *Error) Error() string {
 	if e == nil {
 		return ""
 	}
 	if e.Message == "" {
 		if e.Internal != nil {
-			return "unspecified internal error"
+			return "Internal error"
 		}
-		return "unspecified external error"
+		return "Unspecified error"
 	}
 	return e.Message
 }
 
-// Expose - expose Error struct as solid standard error.
-func (e *Error) Expose() error {
+// ExposeError - complements API error with internal details and returns as standard error interface.
+// Should not be used for client-side errors.
+func (e *Error) ExposeError() error {
 	if e == nil {
 		return nil
 	}
 	if e.IsInternal() {
-		return errors.WithMessage(e.Internal, e.Message)
+		return errors.WithMessage(e.Internal, e.Error())
 	}
 	return e
 }
 
-// IsInternal - checks if API Error is internal (server/infrastructure) error (if true) or client error (if false).
+// IsInternal - checks if API Error is internal (server/infrastructure) or client error.
 func (e *Error) IsInternal() bool {
 	return e != nil && e.Internal != nil
 }

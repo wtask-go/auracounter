@@ -31,7 +31,7 @@ func main() {
 	logger := logging.NewStdout(logging.WithDefaultDecoration("aurasrv", nil))
 	defer logger.Close()
 
-	logger.Infof("Server initialization started ...")
+	logger.Infof("Initialization started ...")
 
 	storage, err := storageFactory(conf)
 	if err != nil {
@@ -56,7 +56,7 @@ func main() {
 
 	logger.Infof("Initialization done, server is starting ...")
 
-	server := newRESTServer(conf, service)
+	server := newRESTServer(conf, service, logger)
 
 	shutdown, err := httpcore.LaunchServer(server, 3*time.Second)
 	if err != nil {
@@ -80,10 +80,10 @@ func storageFactory(cfg *config.Application) (counter.Storage, error) {
 	return mysql.NewStorage(cfg.CounterDB.DSN(), mysql.WithTablePrefix(cfg.CounterDB.TablePrefix))
 }
 
-func newRESTServer(cfg *config.Application, service api.CyclicCounterService) *http.Server {
+func newRESTServer(cfg *config.Application, service api.CyclicCounterService, logger logging.Facade) *http.Server {
 	return &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", cfg.CounterREST.Host, cfg.CounterREST.Port),
-		Handler: rest.NewCounterHandler(cfg.CounterREST.BaseURI, service),
+		Handler: rest.NewCounterHandler(cfg.CounterREST.BaseURI, service, logger),
 		// ErrorLog:     l,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,

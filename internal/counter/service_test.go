@@ -182,7 +182,7 @@ func TestService_GetValue(t *testing.T) {
 		t.Errorf("GetCounterValue(): unexpected nil as result")
 	}
 	if apiErr != nil {
-		t.Errorf("GetCounterValue(): unexpected API error %q", apiErr.Expose())
+		t.Errorf("GetCounterValue(): unexpected API error %q", apiErr.ExposeError())
 	}
 
 	service, err = NewCyclicCounterService(1, &repository{failGet: true})
@@ -211,7 +211,7 @@ func TestService_Increase(t *testing.T) {
 		t.Errorf("IncreaseCounter(): unexpected nil as result")
 	}
 	if apiErr != nil {
-		t.Errorf("IncreaseCounter(): unexpected API error %q", apiErr.Expose())
+		t.Errorf("IncreaseCounter(): unexpected API error %q", apiErr.ExposeError())
 	}
 
 	service, err = NewCyclicCounterService(1, &repository{failIncrease: true})
