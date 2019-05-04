@@ -68,7 +68,7 @@ aurasrv [2019-04-10 22:28:08.469356] INFO Server is ready!
 aurasrv [2019-04-10 22:28:08.469356] INFO Server has stopped, bye ( ᴗ_ ᴗ)
 ```
 
-When the server is running you can use [Postman](https://www.getpostman.com/) or other http-client to work with server API. Check [API docs](https://github.com/wtask-go/auracounter).
+When the server is running you can use [Postman](https://www.getpostman.com/) or other http-client to work with server API. Check [API docs](https://documenter.getpostman.com/view/6496185/S1EJWgGQ).
 
 Also, you can get help from the server in console:
 
